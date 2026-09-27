@@ -1,0 +1,28 @@
+# Source: westerncalendar.uwo.ca, PolicyPages.cfm?PolicyCategoryID=4 ("GRADUATION
+# REQUIREMENTS - UNDERGRADUATE DEGREES" > "Honours Bachelor Degrees (Four-Year)"),
+# plus the Faculty of Science-specific addendum on the same page.
+# Retrieved: 2026-09-27. All figures below are quoted/paraphrased directly from
+# that page; nothing here is estimated.
+code: honours-bachelor-of-science
+name: Honours Bachelor of Science
+totalCredits: 20.0
+seniorCreditMinimum: 13.0 # "at least 13.0 senior courses (numbered 2000-4999)"
+maxFirstYearCredits: 7.0 # derived: totalCredits - seniorCreditMinimum (not stated as its own number in the calendar)
+maxCreditsInOneSubject: 14.0
+residencyMinimumCredits: 15.0 # min courses completed through Western/affiliated colleges
+scienceFacultyMinimumCredits: 11.0 # "at least 11.0 must be from the offerings of the Faculty of Science ..."
+breadth:
+  categories: [A, B, C]
+  minCreditsPerCategory: 1.0
+essay:
+  minCredits: 2.0
+  minSeniorCredits: 1.0
+grading:
+  minMarkPerCourse: 50
+  minOverallAverage: 65
+  honoursModuleMinAverage: 70
+  honoursModuleMinMarkPerCourse: 60
+  additionalModuleMinAverage: 60 # for extra Major/Minor modules beyond the primary Honours Specialization
+notes:
+  - "The Honours Bachelor Degree must include at least an Honours Specialization module or Double Major modules."
+  - "In exceptional circumstances, a student who completes the Honours Specialization module with an average of at least 68% (min 60% per course) may graduate with the Dean's permission — not modelled as an automatic rule; surfaced as an advisory note by the audit engine instead."

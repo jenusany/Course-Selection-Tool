@@ -1,0 +1,64 @@
+# Source: westerncalendar.uwo.ca/Modules.cfm?ModuleID=21058 (MAJOR IN MATHEMATICS).
+# Retrieved 2026-09-27.
+code: major-mathematics
+name: Major in Mathematics
+type: MAJOR
+faculty: Faculty of Science
+department: Mathematics
+
+admission:
+  minAverage: 70
+  minMarkPerCourse: 60
+  averageOverCredits: 3.0
+  requirements:
+    - id: adm-calc-1
+      type: oneOf
+      courses:
+        - { subject: CALCULUS, number: "1000A/B" }
+        - { subject: CALCULUS, number: "1500A/B" }
+        - { subject: NMM, number: "1412A/B" }
+    - id: adm-calc-2
+      type: oneOf
+      courses:
+        - { subject: CALCULUS, number: "1301A/B", minMark: 85 }
+        - { subject: CALCULUS, number: "1501A/B" }
+        - { subject: NMM, number: "1414A/B" }
+  notes:
+    - "Plus 2.0 additional First Year courses."
+    - "One of Mathematics 1600A/B, Mathematics 1700A/B or Numerical and Mathematical Methods 1411A/B must be completed by the end of Term 1 in Year 2 in order not to delay normal progression in the module."
+
+module:
+  totalCredits: 6.0
+  requirements:
+    - id: core-6
+      type: allOf
+      label: "Core Mathematics/Statistics courses"
+      credits: 3.0
+      courses:
+        - { subject: APPLMATH, number: "2402A/B" }
+        - { subject: APPLMATH, number: "3811A/B" }
+        - { subject: MATH, number: "2155F/G" }
+        - { subject: MATH, number: "2156A/B" }
+        - { subject: MATH, number: "3020A/B" }
+        - { subject: STATS, number: "2857A/B" }
+    - id: linear-algebra-2
+      type: specificCourse
+      credits: 0.5
+      course: { subject: MATH, number: "2500A/B" }
+    - id: linear-algebra-3
+      type: specificCourse
+      credits: 0.5
+      course: { subject: MATH, number: "2700A/B" }
+    - id: algebra-choice
+      type: specificCourse
+      credits: 0.5
+      course: { subject: MATH, number: "3022A/B" }
+    - id: senior-choice
+      type: creditsFromList
+      credits: 1.5
+      list:
+        - { subject: STATS, number: "2858A/B" }
+        - { subject: MATH, minLevel: 3000 }
+        - { subject: APPLMATH, minLevel: 3000 }
+      notes:
+        - "The calendar also names 'Mathematics 2250A/B' in this pool; it could not be located in the current (2026) course listing under MATH or any related subject — see DATA_TODO.md. Possibly renumbered or discontinued."

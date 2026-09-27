@@ -1,0 +1,102 @@
+# Source: westerncalendar.uwo.ca/Modules.cfm?ModuleID=21135 (HONOURS SPECIALIZATION
+# IN BIOLOGY). Retrieved 2026-09-27.
+code: hsp-biology
+name: Honours Specialization in Biology
+type: HONOURS_SPECIALIZATION
+faculty: Faculty of Science
+department: Biology
+
+admission:
+  minAverage: 70
+  minMarkPerCourse: 60
+  averageOverCredits: 3.0
+  requirements:
+    - id: adm-bio
+      type: allOf
+      courses:
+        - { subject: BIOLOGY, number: "1001A" }
+        - { subject: BIOLOGY, number: "1002B" }
+    - id: adm-chem
+      type: allOf
+      courses:
+        - { subject: CHEM, number: "1301A/B" }
+        - { subject: CHEM, number: "1302A/B" }
+    - id: adm-physics
+      type: oneOf
+      credits: 0.5
+      courses:
+        - { subject: PHYSICS, number: "1201A/B" }
+        - { subject: PHYSICS, number: "1401A/B" }
+        - { subject: PHYSICS, number: "1501A/B" }
+      notes:
+        - "Physics 1101A/B with a minimum mark of 65% can be used to replace Physics 1201A/B."
+        - "If not completed in Year 1, the Physics requirement must be completed by the end of Year 2."
+    - id: adm-math
+      type: oneOf
+      credits: 1.0
+      courses:
+        - { subject: CALCULUS, number: "1000A/B" }
+        - { subject: CALCULUS, number: "1500A/B" }
+        - { subject: CALCULUS, number: "1301A/B" }
+        - { subject: CALCULUS, number: "1501A/B" }
+        - { subject: MATH, number: "1600A/B" }
+        - { subject: DATASCI, number: "1000A/B" }
+        - { subject: APPLMATH, number: "1201A/B" }
+        - { subject: NMM, number: "1411A/B" }
+        - { subject: NMM, number: "1412A/B" }
+        - { subject: NMM, number: "1414A/B" }
+        - { subject: STATS, number: "1024A/B" }
+      notes:
+        - "If not completed in Year 1, the Mathematics requirement must be completed by the end of Year 2."
+
+module:
+  totalCredits: 10.0
+  requirements:
+    - id: core-5
+      type: allOf
+      label: "Core Biology/Biochemistry courses"
+      credits: 2.5
+      courses:
+        - { subject: BIOCHEM, number: "2280A" }
+        - { subject: BIOLOGY, number: "2290F/G" }
+        - { subject: BIOLOGY, number: "2382A/B" }
+        - { subject: BIOLOGY, number: "2483A/B" }
+        - { subject: BIOLOGY, number: "2581A/B" }
+    - id: organic-chem
+      type: specificCourse
+      credits: 0.5
+      course: { subject: CHEM, number: "2213A/B" }
+    - id: physiology
+      type: specificCourse
+      credits: 0.5
+      course: { subject: BIOLOGY, number: "2601A/B" }
+    - id: stats-choice
+      type: oneOf
+      credits: 0.5
+      courses:
+        - { subject: BIOLOGY, number: "2244A/B" }
+        - { subject: STATS, number: "2244A/B" }
+    - id: upper-year-biology
+      type: creditsFromList
+      credits: 4.0
+      list:
+        - { subject: BIOLOGY, minLevel: 2200 }
+        - { subject: EARTHSCI, number: "3369A/B" }
+      notes:
+        - "At least 3.0 of these 4.0 credits must be from the Department of Biology."
+        - "A maximum of 1.0 credit may be at the 2200-2999 level; at least 1.5 credits must have a laboratory component."
+        - "Basic Medical Sciences disciplines (Anatomy and Cell Biology, Biochemistry, Epidemiology and Biostatistics, Medical Bioinformatics, Medical Biophysics, Medical Sciences, Microbiology and Immunology, One Health, Pathology, Physiology, Physiology and Pharmacology, Pharmacology) also count here but are out of scope for this Science-only seed catalog — flagged in DATA_TODO.md."
+        - "Courses in History of Science cannot be used to fulfil this requirement."
+    - id: senior-biology
+      type: creditsFromList
+      credits: 1.5
+      list:
+        - { subject: BIOLOGY, minLevel: 4000 }
+    - id: capstone-seminar
+      type: oneOf
+      credits: 0.5
+      courses:
+        - { subject: BIOLOGY, number: "4920F/G/Z" }
+        - { subject: BIOLOGY, number: "4944F/G" }
+      notes:
+        - "Students registered in Biology 4999E can satisfy this 0.5 credit with any 4000-level Biology course instead."
