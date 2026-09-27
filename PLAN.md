@@ -378,11 +378,17 @@ Seeded students (5–8, all in `packages/db/seed/students.ts`):
 - Acceptance: `docker compose up`, `pnpm db:migrate && pnpm db:seed`,
   `pnpm dev`, log in as each seeded student, see their basic profile.
 
-**Phase 2 — Degree audit engine**
+**Phase 2 — Degree audit engine** *(built 2026-09-27)*
 - Requirement DSL + zod schema, parser for prereq text, audit engine +
   allocator, dashboard widget showing progress.
 - Acceptance: Vitest suite covering all requirement types and all seeded
   students' expected audit outcomes, passing.
+- Known v1 limitations, each pinned by a test or listed in the audit's
+  `notEvaluated`: greedy (not optimal) allocation; modules audited
+  independently (no cross-module double-counting limit); antirequisite
+  conflicts are warned about but both courses still count; residency and
+  Faculty-of-Science-minimum rules not evaluated; admission requirements are
+  schema-validated but not audited.
 
 **Phase 3 — Course search + schedule builder**
 - Split search/calendar UI, hover preview, conflict highlighting, filters,

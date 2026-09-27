@@ -1,6 +1,8 @@
 import { prisma } from "@wcs/db";
 import { auth } from "@/lib/auth";
 import { Nav } from "@/components/nav";
+import { DegreeProgress } from "@/components/degree-progress";
+import { getDegreeAudit } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -27,9 +29,8 @@ export default async function DashboardPage() {
   const student = await prisma.student.findUnique({
     where: { userId: user.id },
     include: {
-      programs: { include: { program: true } },
       holds: { where: { resolvedAt: null } },
-      enrollments: { include: { course: true } },
+      enrollments: { where: { status: "IN_PROGRESS" }, include: { course: true } },
     },
   });
 
@@ -42,10 +43,8 @@ export default async function DashboardPage() {
     );
   }
 
-  const completed = student.enrollments.filter((e) => e.status === "COMPLETED");
-  const inProgress = student.enrollments.filter((e) => e.status === "IN_PROGRESS");
-  const creditsCompleted = completed.reduce((sum, e) => sum + e.course.creditWeight, 0);
-  const creditsInProgress = inProgress.reduce((sum, e) => sum + e.course.creditWeight, 0);
+  const inProgress = student.enrollments;
+  const audit = await getDegreeAudit(student.id);
 
   return (
     <>
@@ -69,34 +68,8 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        <section className="mt-6 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-lg border border-neutral-200 bg-white p-4">
-            <div className="text-2xl font-semibold text-western-purple">{creditsCompleted.toFixed(1)}</div>
-            <div className="text-xs text-neutral-500">Credits completed</div>
-          </div>
-          <div className="rounded-lg border border-neutral-200 bg-white p-4">
-            <div className="text-2xl font-semibold text-western-purple">{creditsInProgress.toFixed(1)}</div>
-            <div className="text-xs text-neutral-500">Credits in progress</div>
-          </div>
-          <div className="rounded-lg border border-neutral-200 bg-white p-4">
-            <div className="text-2xl font-semibold text-western-purple">20.0</div>
-            <div className="text-xs text-neutral-500">Required for Honours BSc</div>
-          </div>
-        </section>
-
         <section className="mt-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">Program(s)</h2>
-          {student.programs.length === 0 ? (
-            <p className="mt-2 text-sm text-neutral-600">Undeclared</p>
-          ) : (
-            <ul className="mt-2 space-y-1 text-sm">
-              {student.programs.map((sp) => (
-                <li key={sp.id}>
-                  {sp.program.name} {sp.isPrimary ? "" : "(secondary)"}
-                </li>
-              ))}
-            </ul>
-          )}
+          <DegreeProgress audit={audit} />
         </section>
 
         <section className="mt-6">
@@ -112,8 +85,7 @@ export default async function DashboardPage() {
         </section>
 
         <p className="mt-10 text-xs text-neutral-400">
-          Degree audit, course search, and the schedule builder land in later phases — this dashboard is Phase 1
-          scaffolding only.
+          Course search and the schedule builder land in Phase 3.
         </p>
       </main>
     </>

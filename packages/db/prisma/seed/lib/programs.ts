@@ -1,41 +1,35 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
-import { parse } from "yaml";
 import type { PrismaClient } from "@prisma/client";
+import type { ModuleDefinition } from "@wcs/core";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REQUIREMENTS_ROOT = path.join(__dirname, "../../../../../requirements");
-
-const MODULE_FILES = [
-  "hsp-computer-science.yaml",
-  "major-computer-science.yaml",
-  "hsp-biology.yaml",
-  "major-mathematics.yaml",
-];
-
-export async function seedPrograms(prisma: PrismaClient): Promise<Record<string, string>> {
+/**
+ * One Program row per module file in requirements/modules/ (already validated
+ * by loadRequirementSet). requirementsRef is the module code, which is also
+ * the YAML file name.
+ */
+export async function seedPrograms(
+  prisma: PrismaClient,
+  modules: Iterable<ModuleDefinition>,
+): Promise<Record<string, string>> {
   const idByCode: Record<string, string> = {};
+  let count = 0;
 
-  for (const file of MODULE_FILES) {
-    const raw = readFileSync(path.join(REQUIREMENTS_ROOT, "modules", file), "utf-8");
-    const doc = parse(raw) as { code: string; name: string; type: string; faculty: string; department: string };
-
+  for (const def of modules) {
+    const data = {
+      name: def.name,
+      type: def.type,
+      faculty: def.faculty,
+      department: def.department,
+      requirementsRef: def.code,
+    };
     const program = await prisma.program.upsert({
-      where: { code: doc.code },
-      update: {},
-      create: {
-        code: doc.code,
-        name: doc.name,
-        type: doc.type as never,
-        faculty: doc.faculty,
-        department: doc.department,
-        requirementsRef: doc.code,
-      },
+      where: { code: def.code },
+      update: data,
+      create: { code: def.code, ...data },
     });
-    idByCode[doc.code] = program.id;
+    idByCode[def.code] = program.id;
+    count++;
   }
 
-  console.log(`Seeded ${MODULE_FILES.length} programs/modules.`);
+  console.log(`Seeded ${count} programs/modules.`);
   return idByCode;
 }

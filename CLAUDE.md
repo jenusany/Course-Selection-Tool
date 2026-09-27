@@ -99,10 +99,27 @@ syntax error pointing at a box-drawing character in the migration file).
   the calendar's Breadth Requirements page). Both are computed from those two
   lookup tables in `packages/db/prisma/seed/lib/courses.ts` rather than
   fetched per course — this is exact, not a heuristic.
-- **Prerequisite/antirequisite text is stored raw in Phase 1**; the
-  structured AND/OR parser (`packages/core/src/prereq`) is a Phase 2
-  deliverable. `Course.prerequisiteTree`/`antirequisiteTree` are `null` until
-  then.
+- **Prerequisite/antirequisite text is stored raw *and* parsed.** The seed
+  runs `packages/core/src/prereq/parse.ts` over every course and stores the
+  result in `Course.prerequisiteTree`/`antirequisiteTree`. The parser never
+  guesses: fragments it can't structure become `externalRequirement` nodes
+  with `reason: "unparsed"` (and the seed logs which courses need review);
+  subjects we haven't seeded become `reason: "outOfCatalog"` rather than an
+  invented subject code. The list of partially-parsed courses is pinned in
+  `packages/core/test/prereq.test.ts` — update it deliberately.
+- **Degree audit engine** (`packages/core/src/audit`): `runDegreeAudit` is a
+  pure function of (record, programs, catalog, degree YAML, module YAML).
+  Module requirements are allocated *exclusively* (a course counts toward at
+  most one requirement per module unless `allowSharedWith` says otherwise)
+  by a deterministic greedy pass — specific/allOf, then oneOf, then pools by
+  scarcity; degree-level rules (total/senior credits, breadth, essay,
+  averages) are evaluated in *shared* mode. Modules are audited
+  independently, so a course may count toward two modules. Level rules
+  compare the four-digit course number (`2200 level or above` excludes
+  2100-2199), not the catalog `level` bucket. Bump `AUDIT_ENGINE_VERSION`
+  whenever a change would alter results for the same input — it's part of
+  the `DegreeAuditSnapshot` fingerprint that `apps/web/lib/audit.ts` uses to
+  decide whether a cached audit is still valid.
 - **Monorepo tool: pnpm workspaces only**, no Turborepo/Nx — flagged as an
   intentional deviation from a literal reading of the original stack list,
   approved during planning; revisit only if build caching actually becomes a
@@ -130,7 +147,16 @@ breadth Category A/B testable).
 - Seed student fixtures live in `packages/db/prisma/seed/students.ts` as
   plain data (`PERSONAS`) — add new fixtures there, not by hand-writing SQL
   or ad hoc scripts.
-- When adding a new module: add a YAML file under `requirements/modules/`,
-  add its filename to `MODULE_FILES` in
-  `packages/db/prisma/seed/lib/programs.ts`, and reference its `code` from
-  any student fixture that should be enrolled in it.
+- When adding a new module: add `requirements/modules/<code>.yaml` (the file
+  name must equal the module's `code`), then reference that `code` from any
+  student fixture that should be enrolled in it. The seed creates a `Program`
+  row for every module file automatically, and fails with a readable error if
+  a file doesn't validate against `packages/core/src/requirements/schema.ts`.
+  `checkModuleAgainstCatalog` (run in the core test suite) catches course
+  codes that aren't in the catalog.
+- Requirement node types: `specificCourse`, `allOf`, `oneOf` (optionally
+  with `credits`), `creditsFromList` (matchers on subject / exact number /
+  minLevel / maxLevel / breadth / essay), `creditsAtLevel`, `totalCredits`,
+  `moduleAverage`, `cumulativeAverage`, `count` (n-of-m, nested). If a
+  calendar rule can't be expressed with these, add a node type to the schema
+  and engine — don't special-case a module in code.

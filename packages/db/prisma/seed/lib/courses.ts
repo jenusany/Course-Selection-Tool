@@ -1,7 +1,15 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import type { PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient } from "@prisma/client";
+import {
+  buildModuleLookup,
+  buildSubjectLookup,
+  parseAntirequisiteText,
+  parsePrerequisiteText,
+  type ModuleDefinition,
+  type RequisiteNode,
+} from "@wcs/core";
 import { generateSections, termsForSuffix } from "./sections.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -36,18 +44,34 @@ function titleCase(allCaps: string): string {
     .join(" ");
 }
 
-export async function seedCourses(prisma: PrismaClient) {
+const toJson = (tree: RequisiteNode | null) => (tree ? (tree as unknown as Prisma.InputJsonValue) : Prisma.DbNull);
+
+export async function seedCourses(prisma: PrismaClient, modules: Iterable<ModuleDefinition>) {
   const raw: RawCourse[] = JSON.parse(
     readFileSync(path.join(__dirname, "../data/courses.json"), "utf-8"),
   );
 
+  // Structured requisite trees from packages/core's parser. The raw text is always stored alongside, and any
+  // fragment the parser couldn't structure is kept as an "unparsed" node, so a bad parse never loses information.
+  const parserOptions = {
+    subjects: buildSubjectLookup(raw.map((c) => ({ subject: c.subjectCode, subjectName: c.subjectName }))),
+    modules: buildModuleLookup(modules),
+  };
+  const needsReview: string[] = [];
+
   const courseIdByKey = new Map<string, string>();
 
   for (const c of raw) {
+    const prereq = parsePrerequisiteText(c.prerequisiteText, parserOptions);
+    const antireq = parseAntirequisiteText(c.antirequisiteText, parserOptions);
+    if (!prereq.complete || !antireq.complete) needsReview.push(`${c.subjectCode} ${c.number}`);
+    const trees = { prerequisiteTree: toJson(prereq.tree), antirequisiteTree: toJson(antireq.tree) };
+
     const course = await prisma.course.upsert({
       where: { subject_number: { subject: c.subjectCode, number: c.number } },
-      update: {},
+      update: trees,
       create: {
+        ...trees,
         subject: c.subjectCode,
         subjectName: c.subjectName,
         number: c.number,
@@ -99,5 +123,6 @@ export async function seedCourses(prisma: PrismaClient) {
   }
 
   console.log(`Seeded ${raw.length} courses (+ synthetic sections).`);
+  console.log(`Requisite text needing human review (partially parsed): ${needsReview.length} — ${needsReview.join(", ")}`);
   return courseIdByKey;
 }

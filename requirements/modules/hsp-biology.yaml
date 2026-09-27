@@ -85,7 +85,9 @@ module:
       notes:
         - "At least 3.0 of these 4.0 credits must be from the Department of Biology."
         - "A maximum of 1.0 credit may be at the 2200-2999 level; at least 1.5 credits must have a laboratory component."
-        - "Basic Medical Sciences disciplines (Anatomy and Cell Biology, Biochemistry, Epidemiology and Biostatistics, Medical Bioinformatics, Medical Biophysics, Medical Sciences, Microbiology and Immunology, One Health, Pathology, Physiology, Physiology and Pharmacology, Pharmacology) also count here but are out of scope for this Science-only seed catalog — flagged in DATA_TODO.md."
+        # These disciplines' courses aren't in the Science-only seed catalog, so the list above can't match them
+        # and suggestions only show Biology options — see DATA_TODO.md.
+        - "Courses in the Basic Medical Sciences disciplines (Anatomy and Cell Biology, Biochemistry, Epidemiology and Biostatistics, Medical Bioinformatics, Medical Biophysics, Medical Sciences, Microbiology and Immunology, One Health, Pathology, Physiology, Physiology and Pharmacology, Pharmacology) also count here."
         - "Courses in History of Science cannot be used to fulfil this requirement."
     - id: senior-biology
       type: creditsFromList

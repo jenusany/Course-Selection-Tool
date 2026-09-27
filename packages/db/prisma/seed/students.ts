@@ -241,19 +241,20 @@ export const PERSONAS: StudentPersona[] = [
       c("COMPSCI 2210A/B", "FALL", 2024, 70),
       c("COMPSCI 2211A/B", "WINTER", 2025, 68),
       c("COMPSCI 2212A/B/Y", "WINTER", 2025, 72),
-      c("COMPSCI 2214A/B", "FALL", 2024, 76),
+      c("COMPSCI 2214A/B", "FALL", 2024, 70),
       c("MATH 1600A/B", "FALL", 2024, 74),
-      c("WRITING 2101F/G", "WINTER", 2025, 75),
+      c("WRITING 2101F/G", "WINTER", 2025, 69),
       c("COMPSCI 3305A/B", "FALL", 2025, 70),
       c("COMPSCI 3307A/B/Y", "FALL", 2025, 69),
       c("COMPSCI 3331A/B", "WINTER", 2026, 71),
       c("COMPSCI 3340A/B", "WINTER", 2026, 68),
       c("COMPSCI 3342A/B", "FALL", 2025, 70),
       c("COMPSCI 3350A/B", "WINTER", 2026, 70),
-      c("STATS 2857A/B", "WINTER", 2026, 74),
+      c("STATS 2857A/B", "WINTER", 2026, 71),
     ],
     inProgress: [p("COMPSCI 4490Z", "FALL", 2026)],
-    fixtureNote: "Borderline honours-average fixture: core module courses average ~69.8% — just under the 70% Honours Specialization cutoff (no mark below 60%), a pinned edge case for the audit engine's average calculation.",
+    fixtureNote:
+      "Borderline honours-average fixture: the module average over every course counted toward the HSp (core-11 plus the discrete-math, writing and stats choices) is 69.86% — just under the 70% cutoff, above the 68% Dean's-permission floor, no mark below 60%. A pinned edge case for the audit engine's average calculation.",
   },
 ];
 
@@ -294,6 +295,10 @@ export async function seedStudents(prisma: PrismaClient, courseIdByKey: Map<stri
         create: { studentId: student.id, programId, isPrimary: prog.isPrimary },
       });
     }
+
+    // Re-seeding replaces the fixture's record rather than appending duplicate enrollments/holds.
+    await prisma.enrollment.deleteMany({ where: { studentId: student.id } });
+    await prisma.hold.deleteMany({ where: { studentId: student.id } });
 
     for (const ref of persona.completed) {
       const courseId = courseIdByKey.get(ref.key);

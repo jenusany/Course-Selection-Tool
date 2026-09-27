@@ -20,6 +20,22 @@ scraped directly from the live 2026 calendar at `westerncalendar.uwo.ca` on
   should be dropped from the requirement. Not seeded as a `Course` row; the
   requirement still works via its other options.
 
+- **Seeded student Jordan Whitfield has an antirequisite pair on record.**
+  COMPSCI 2214A/B lists MATH 2155F/G as an antirequisite, and the fixture has
+  both completed. The Phase 2 audit correctly flags it (and the core test
+  suite pins that warning). Looks unintended — the designated antirequisite
+  fixture is Derek Osei. **Action needed:** confirm whether to keep it as a
+  second antirequisite case or swap one course (e.g. drop COMPSCI 2214A/B;
+  MATH 2155F/G alone satisfies both majors' discrete-math requirement).
+- **Prerequisite/antirequisite text the parser couldn't fully structure.**
+  The seed logs these (currently 22 courses); each keeps its raw text, and
+  the unstructured fragments are stored as `reason: "unparsed"` nodes or as
+  notes (mostly "Integrated Science 1001X can be used in place of ..."
+  substitution sentences, and a few genuinely ambiguous lists). The exact
+  list is pinned in `packages/core/test/prereq.test.ts`. **Action needed:**
+  none for the audit (it doesn't use prerequisites); worth a hand review
+  before Phase 3's live prerequisite validation relies on them.
+
 ## Intentionally synthetic (not real Western data)
 
 - **All `Section` rows (timetable data)** — days/times, room, instructor,
@@ -36,7 +52,10 @@ scraped directly from the live 2026 calendar at `westerncalendar.uwo.ca` on
   antirequisite conflict, active hold, double-module, mid-program, borderline
   honours average). Real course codes and grades are used to keep them
   internally consistent with the requirement rules, but these are not real
-  students or transcripts.
+  students or transcripts. (Phase 2: three of Liam Fontaine's grades were
+  lowered so his *full* module average — every course counted toward the
+  HSp, not just the 11 core courses — is 69.86%, making the "just under 70%"
+  fixture actually test that.)
 
 ## Scope simplifications
 

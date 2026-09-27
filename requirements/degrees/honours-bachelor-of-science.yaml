@@ -22,6 +22,7 @@ grading:
   minOverallAverage: 65
   honoursModuleMinAverage: 70
   honoursModuleMinMarkPerCourse: 60
+  honoursModuleExceptionalAverage: 68 # the "68% + Dean's permission" clause in notes below; triggers an advisory, not a pass
   additionalModuleMinAverage: 60 # for extra Major/Minor modules beyond the primary Honours Specialization
 notes:
   - "The Honours Bachelor Degree must include at least an Honours Specialization module or Double Major modules."

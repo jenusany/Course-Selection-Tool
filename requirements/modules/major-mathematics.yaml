@@ -61,4 +61,6 @@ module:
         - { subject: MATH, minLevel: 3000 }
         - { subject: APPLMATH, minLevel: 3000 }
       notes:
-        - "The calendar also names 'Mathematics 2250A/B' in this pool; it could not be located in the current (2026) course listing under MATH or any related subject — see DATA_TODO.md. Possibly renumbered or discontinued."
+        # The calendar also names "Mathematics 2250A/B" in this pool; it isn't in the current (2026) MATH listing
+        # (possibly renumbered or discontinued) so it's left out of `list` — see DATA_TODO.md.
+        - "The calendar also lists Mathematics 2250A/B for this requirement; it doesn't appear in the current course listing, so check with the department if you're relying on it."

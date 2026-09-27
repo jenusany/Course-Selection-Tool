@@ -103,4 +103,5 @@ module:
         - { subject: BIOLOGY, number: "2244A/B" }
         - { subject: STATS, number: "2857A/B" }
   notes:
-    - "Students also pursuing the Software Engineering Minor or Game Development Minor must take Computer Science 4470Y or 4480Y respectively, replacing Computer Science 4490Z with a 0.5-credit 4000-level Computer Science course. Not modelled in v1 — surfaced as an advisory note when those minors are detected on the student's record."
+    # Not modelled as a rule: the audit shows this note on the module but doesn't apply the substitution.
+    - "Students also pursuing the Software Engineering Minor or Game Development Minor must take Computer Science 4470Y or 4480Y respectively, replacing Computer Science 4490Z with a 0.5-credit 4000-level Computer Science course. This audit doesn't apply that substitution automatically — confirm with an academic counsellor if it applies to you."

@@ -9,3 +9,5 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export * from "@prisma/client";
+// Node-only helpers (filesystem loaders, provider implementations) live in "@wcs/db/server" so this entry stays
+// importable from Next's edge middleware.

@@ -359,13 +359,18 @@ model AccessLogEntry {
 // ── Cached audit results ──────────────────────────────────────────────
 
 model DegreeAuditSnapshot {
-  id          String   @id @default(cuid())
-  studentId   String
-  student     Student  @relation(fields: [studentId], references: [id])
-  generatedAt DateTime @default(now())
-  resultJson  Json
+  id            String   @id @default(cuid())
+  studentId     String
+  student       Student  @relation(fields: [studentId], references: [id])
+  generatedAt   DateTime @default(now())
+  // sha256 over the audit's full input (record, programs, requirement YAML, engine version).
+  // A snapshot is reused only while its fingerprint still matches — see apps/web/lib/audit.ts.
+  fingerprint   String
+  engineVersion String
+  resultJson    Json
 
   @@index([studentId, generatedAt])
+  @@index([studentId, fingerprint])
 }
 
 // ── Chatbot / RAG ──────────────────────────────────────────────────────
