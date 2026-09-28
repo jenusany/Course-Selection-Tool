@@ -1,0 +1,396 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+// ── Identity & roles ──────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  COUNSELLOR
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student           Student?           @relation("UserStudent")
+  advisingNotes     AdvisingNote[]     @relation("CounsellorNotes")
+  accessLogsAsActor AccessLogEntry[]   @relation("AccessLogViewer")
+  counsellorLinks   CounsellorStudent[] @relation("CounsellorLinks")
+}
+
+// which counsellors are permitted to view which students (advising relationship)
+model CounsellorStudent {
+  id           String   @id @default(cuid())
+  counsellorId String
+  counsellor   User     @relation("CounsellorLinks", fields: [counsellorId], references: [id])
+  studentId    String
+  student      Student  @relation("StudentCounsellors", fields: [studentId], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@unique([counsellorId, studentId])
+}
+
+enum StudentStanding {
+  GOOD_STANDING
+  ON_PROBATION
+  REQUIRED_TO_WITHDRAW
+}
+
+model Student {
+  id                    String          @id @default(cuid())
+  userId                String          @unique
+  user                  User            @relation("UserStudent", fields: [userId], references: [id])
+  year                  Int
+  standing              StudentStanding @default(GOOD_STANDING)
+  enrollmentAppointment DateTime?
+  recordVersion         Int             @default(1)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  programs           StudentProgram[]
+  enrollments        Enrollment[]
+  holds              Hold[]
+  draftSchedules     DraftSchedule[]
+  enrollmentIntents  EnrollmentIntent[]
+  advisingNotes      AdvisingNote[]
+  accommodationTickets AccommodationTicket[]
+  petitionExceptions PetitionException[]
+  accessLogEntries   AccessLogEntry[]     @relation("AccessLogSubject")
+  auditSnapshots     DegreeAuditSnapshot[]
+  counsellors        CounsellorStudent[]  @relation("StudentCounsellors")
+}
+
+enum HoldType {
+  FINANCIAL
+  ADVISING
+  MEDICAL_CLEARANCE
+  DISCIPLINARY
+  DOCUMENT_MISSING
+}
+
+model Hold {
+  id         String    @id @default(cuid())
+  studentId  String
+  student    Student   @relation(fields: [studentId], references: [id])
+  type       HoldType
+  reason     String
+  placedAt   DateTime  @default(now())
+  resolvedAt DateTime?
+  version    Int       @default(1)
+}
+
+// ── Catalog ────────────────────────────────────────────────────────
+
+enum Term {
+  FALL
+  WINTER
+  SUMMER
+}
+
+enum BreadthCategory {
+  A
+  B
+  C
+}
+
+model Course {
+  id                 String   @id @default(cuid())
+  subject             String
+  subjectName          String
+  number               String // e.g. "2210A/B"
+  title                String
+  description          String?  @db.Text
+  creditWeight         Float
+  essay                Boolean  @default(false)
+  breadth              BreadthCategory?
+  level                Int // 0, 1000, 2000, 3000, 4000
+  prerequisiteText     String?  @db.Text
+  antirequisiteText    String?  @db.Text
+  corequisiteText      String?  @db.Text
+  extraInfo            String?  @db.Text
+  prerequisiteTree     Json?
+  antirequisiteTree    Json?
+  sourceUrl            String?
+  unverified           Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  sections    Section[]
+  enrollments Enrollment[]
+
+  @@unique([subject, number])
+  @@index([subject, level])
+}
+
+enum SectionComponent {
+  LEC
+  LAB
+  TUT
+}
+
+model Section {
+  id             String            @id @default(cuid())
+  courseId       String
+  course         Course            @relation(fields: [courseId], references: [id])
+  term           Term
+  year           Int
+  component      SectionComponent
+  sectionCode    String // e.g. "001"
+  meetingTimes   Json // [{ day: "MO", start: "10:30", end: "11:30" }]
+  location       String?
+  instructor     String?
+  capacity       Int
+  enrolledCount  Int               @default(0)
+  version        Int               @default(1)
+  synthetic      Boolean           @default(true) // no real Western timetable feed exists; always true for now
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  enrollments        Enrollment[]
+  scheduleItemsPreferred ScheduleItem[] @relation("PreferredSection")
+  scheduleItemsFallback  ScheduleItem[] @relation("FallbackSection")
+
+  @@index([courseId, term, year])
+}
+
+// ── Programs / modules ──────────────────────────────────────────────
+
+enum ModuleType {
+  HONOURS_SPECIALIZATION
+  MAJOR
+  MINOR
+  SPECIALIZATION
+  GENERAL
+}
+
+model Program {
+  id             String     @id @default(cuid())
+  code           String     @unique // e.g. "hsp-computer-science"
+  name           String
+  type           ModuleType
+  faculty        String
+  department     String
+  requirementsRef String    // key into /requirements/modules/*.yaml
+  createdAt      DateTime   @default(now())
+
+  students StudentProgram[]
+}
+
+model StudentProgram {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  programId String
+  program   Program  @relation(fields: [programId], references: [id])
+  declaredAt DateTime @default(now())
+  isPrimary Boolean  @default(true)
+
+  @@unique([studentId, programId])
+}
+
+// ── Enrollment history ───────────────────────────────────────────────
+
+enum EnrollmentStatus {
+  COMPLETED
+  IN_PROGRESS
+}
+
+model Enrollment {
+  id        String           @id @default(cuid())
+  studentId String
+  student   Student          @relation(fields: [studentId], references: [id])
+  courseId  String
+  course    Course           @relation(fields: [courseId], references: [id])
+  sectionId String?
+  section   Section?         @relation(fields: [sectionId], references: [id])
+  term      Term
+  year      Int
+  grade     Int? // percentage, null while in progress
+  status    EnrollmentStatus
+  createdAt DateTime         @default(now())
+
+  // Idempotency guard for the enrollment commit worker: a retried job that
+  // already succeeded hits this constraint instead of double-enrolling.
+  @@unique([studentId, courseId, term, year])
+  @@index([studentId, status])
+}
+
+// ── Planning ──────────────────────────────────────────────────────────
+
+model DraftSchedule {
+  id               String   @id @default(cuid())
+  studentId        String
+  student          Student  @relation(fields: [studentId], references: [id])
+  term             Term
+  year             Int
+  name             String
+  isEnrollmentPlan Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  items ScheduleItem[]
+}
+
+model ScheduleItem {
+  id                  String        @id @default(cuid())
+  scheduleId          String
+  schedule            DraftSchedule @relation(fields: [scheduleId], references: [id])
+  courseId            String
+  preferredSectionId  String?
+  preferredSection    Section?      @relation("PreferredSection", fields: [preferredSectionId], references: [id])
+  fallbackSectionId   String?
+  fallbackSection     Section?      @relation("FallbackSection", fields: [fallbackSectionId], references: [id])
+}
+
+// ── Enrollment engine ───────────────────────────────────────────────────
+
+enum IntentStatus {
+  PENDING
+  QUEUED
+  VALIDATING
+  ENROLLED
+  PARTIALLY_ENROLLED
+  FAILED
+}
+
+model EnrollmentIntent {
+  id              String       @id @default(cuid())
+  studentId       String
+  student         Student      @relation(fields: [studentId], references: [id])
+  term            Term
+  year            Int
+  status          IntentStatus @default(PENDING)
+  appointmentTime DateTime
+  items           Json // [{ courseId, preferredSectionId, fallbackSectionId }]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  preValidationResults PreValidationResult[]
+  attempts             EnrollmentAttempt[]
+
+  @@index([status, appointmentTime])
+  // One open (non-terminal) intent per student/term/year — a new enrollment
+  // plan submission should replace, not duplicate, an existing intent.
+  @@unique([studentId, term, year])
+}
+
+model PreValidationResult {
+  id           String           @id @default(cuid())
+  intentId     String
+  intent       EnrollmentIntent @relation(fields: [intentId], references: [id])
+  fingerprint  String
+  resultJson   Json
+  computedAt   DateTime         @default(now())
+}
+
+model EnrollmentAttempt {
+  id         String           @id @default(cuid())
+  intentId   String
+  intent     EnrollmentIntent @relation(fields: [intentId], references: [id])
+  courseId   String?
+  sectionId  String?
+  outcome    String
+  reason     String?
+  createdAt  DateTime         @default(now())
+
+  @@index([intentId, sectionId])
+}
+
+// ── Academic file ─────────────────────────────────────────────────────
+
+model AdvisingNote {
+  id            String   @id @default(cuid())
+  studentId     String
+  student       Student  @relation(fields: [studentId], references: [id])
+  counsellorId  String
+  counsellor    User     @relation("CounsellorNotes", fields: [counsellorId], references: [id])
+  date          DateTime @default(now())
+  faculty       String
+  topic         String
+  summary       String   @db.Text
+  followUps     String?  @db.Text
+  supersedesId  String? // append-only: corrections point back to the original note
+  createdAt     DateTime @default(now())
+}
+
+enum AccommodationStatus {
+  REQUESTED
+  ACTIVE
+  EXPIRED
+  DENIED
+}
+
+model AccommodationTicket {
+  id        String              @id @default(cuid())
+  studentId String
+  student   Student             @relation(fields: [studentId], references: [id])
+  type      String // category only, no medical detail
+  status    AccommodationStatus
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+}
+
+model PetitionException {
+  id         String   @id @default(cuid())
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id])
+  type       String
+  decision   String
+  decidedBy  String
+  date       DateTime
+  createdAt  DateTime @default(now())
+}
+
+model AccessLogEntry {
+  id           String   @id @default(cuid())
+  viewerId     String
+  viewer       User     @relation("AccessLogViewer", fields: [viewerId], references: [id])
+  studentId    String
+  student      Student  @relation("AccessLogSubject", fields: [studentId], references: [id])
+  resourceType String // e.g. "academic-file", "advising-note"
+  action       String // "VIEW" | "EDIT"
+  createdAt    DateTime @default(now())
+
+  @@index([studentId, createdAt])
+}
+
+// ── Cached audit results ──────────────────────────────────────────────
+
+model DegreeAuditSnapshot {
+  id            String   @id @default(cuid())
+  studentId     String
+  student       Student  @relation(fields: [studentId], references: [id])
+  generatedAt   DateTime @default(now())
+  // sha256 over the audit's full input (record, programs, requirement YAML, engine version).
+  // A snapshot is reused only while its fingerprint still matches — see apps/web/lib/audit.ts.
+  fingerprint   String
+  engineVersion String
+  resultJson    Json
+
+  @@index([studentId, generatedAt])
+  @@index([studentId, fingerprint])
+}
+
+// ── Chatbot / RAG ──────────────────────────────────────────────────────
+
+model CalendarChunk {
+  id        String                      @id @default(cuid())
+  sourceRef String
+  content   String                      @db.Text
+  embedding Unsupported("vector(1536)")?
+  metadata  Json?
+  createdAt DateTime                    @default(now())
+}

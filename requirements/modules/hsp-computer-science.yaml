@@ -1,0 +1,107 @@
+# Source: westerncalendar.uwo.ca/Modules.cfm?ModuleID=21123 (HONOURS SPECIALIZATION
+# IN COMPUTER SCIENCE (COMPUTER SCIENCE PROGRAM)). Retrieved 2026-09-27.
+code: hsp-computer-science
+name: Honours Specialization in Computer Science
+type: HONOURS_SPECIALIZATION
+faculty: Faculty of Science
+department: Computer Science (Computer Science Program)
+
+admission:
+  minAverage: 70
+  minMarkPerCourse: 60
+  averageOverCredits: 3.0
+  requirements:
+    - id: adm-1020
+      type: specificCourse
+      course: { subject: COMPSCI, number: "1020A/B" }
+    - id: adm-1025
+      type: oneOf
+      minMark: 65
+      courses:
+        - { subject: COMPSCI, number: "1025A/B" }
+        - { subject: COMPSCI, number: "1026A/B" }
+        - { subject: DATASCI, number: "1200A/B" }
+        - { subject: ENGSCI, number: "1036A/B" }
+    - id: adm-1027
+      type: oneOf
+      minMark: 65
+      courses:
+        - { subject: COMPSCI, number: "1027A/B" }
+        - { subject: COMPSCI, number: "1037A/B" }
+    - id: adm-calc
+      type: oneOf
+      credits: 1.0
+      courses:
+        - { subject: APPLMATH, number: "1201A/B" }
+        - { subject: CALCULUS, number: "1000A/B" }
+        - { subject: CALCULUS, number: "1301A/B" }
+        - { subject: CALCULUS, number: "1500A/B" }
+        - { subject: CALCULUS, number: "1501A/B" }
+        - { subject: MATH, number: "1600A/B" }
+        - { subject: NMM, number: "1411A/B" }
+        - { subject: NMM, number: "1412A/B" }
+        - { subject: NMM, number: "1414A/B" }
+  notes:
+    - "Students not registered in the Computer Science program may only enrol in up to 1.5 courses from Computer Science per academic year."
+
+module:
+  totalCredits: 9.0
+  requirements:
+    - id: core-11
+      type: allOf
+      label: "Core Computer Science courses"
+      credits: 5.5
+      courses:
+        - { subject: COMPSCI, number: "2208A/B" }
+        - { subject: COMPSCI, number: "2209A/B" }
+        - { subject: COMPSCI, number: "2210A/B" }
+        - { subject: COMPSCI, number: "2211A/B" }
+        - { subject: COMPSCI, number: "2212A/B/Y" }
+        - { subject: COMPSCI, number: "3305A/B" }
+        - { subject: COMPSCI, number: "3307A/B/Y" }
+        - { subject: COMPSCI, number: "3331A/B" }
+        - { subject: COMPSCI, number: "3340A/B" }
+        - { subject: COMPSCI, number: "3342A/B" }
+        - { subject: COMPSCI, number: "3350A/B" }
+    - id: discrete-choice
+      type: oneOf
+      credits: 0.5
+      courses:
+        - { subject: COMPSCI, number: "2214A/B" }
+        - { subject: MATH, number: "2155F/G" }
+    - id: writing-choice
+      type: oneOf
+      credits: 0.5
+      courses:
+        - { subject: WRITING, number: "2101F/G" }
+        - { subject: WRITING, number: "2111F/G" }
+        - { subject: WRITING, number: "2131F/G" }
+    - id: capstone
+      type: specificCourse
+      credits: 0.5
+      course: { subject: COMPSCI, number: "4490Z" }
+    - id: cs-4000-choice
+      type: creditsFromList
+      credits: 1.0
+      list:
+        - { subject: COMPSCI, minLevel: 4000 }
+        - { subject: DATASCI, number: "3000A/B" }
+    - id: cs-3000-plus-choice
+      type: creditsFromList
+      credits: 0.5
+      list:
+        - { subject: COMPSCI, minLevel: 3000 }
+        - { subject: SCIENCE, number: "3377A/B" }
+        - { subject: MATH, number: "2156A/B" }
+        - { subject: MATH, number: "3159A/B" }
+    - id: stats-choice
+      type: oneOf
+      credits: 0.5
+      courses:
+        - { subject: STATS, number: "2141A/B" }
+        - { subject: STATS, number: "2244A/B" }
+        - { subject: BIOLOGY, number: "2244A/B" }
+        - { subject: STATS, number: "2857A/B" }
+  notes:
+    # Not modelled as a rule: the audit shows this note on the module but doesn't apply the substitution.
+    - "Students also pursuing the Software Engineering Minor or Game Development Minor must take Computer Science 4470Y or 4480Y respectively, replacing Computer Science 4490Z with a 0.5-credit 4000-level Computer Science course. This audit doesn't apply that substitution automatically — confirm with an academic counsellor if it applies to you."

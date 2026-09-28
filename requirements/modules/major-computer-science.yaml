@@ -1,0 +1,74 @@
+# Source: westerncalendar.uwo.ca/Modules.cfm?ModuleID=21112 (MAJOR IN COMPUTER
+# SCIENCE (COMPUTER SCIENCE PROGRAM)). Retrieved 2026-09-27.
+code: major-computer-science
+name: Major in Computer Science
+type: MAJOR
+faculty: Faculty of Science
+department: Computer Science (Computer Science Program)
+
+admission:
+  minMarkPerCourse: 60
+  requirements:
+    - id: adm-1020
+      type: specificCourse
+      course: { subject: COMPSCI, number: "1020A/B" }
+    - id: adm-1025
+      type: oneOf
+      minMark: 65
+      courses:
+        - { subject: COMPSCI, number: "1025A/B" }
+        - { subject: COMPSCI, number: "1026A/B" }
+        - { subject: DATASCI, number: "1200A/B" }
+        - { subject: ENGSCI, number: "1036A/B" }
+    - id: adm-1027
+      type: oneOf
+      minMark: 65
+      courses:
+        - { subject: COMPSCI, number: "1027A/B" }
+        - { subject: COMPSCI, number: "1037A/B" }
+    - id: adm-calc
+      type: oneOf
+      credits: 1.0
+      courses:
+        - { subject: APPLMATH, number: "1201A/B" }
+        - { subject: CALCULUS, number: "1000A/B" }
+        - { subject: CALCULUS, number: "1301A/B" }
+        - { subject: CALCULUS, number: "1500A/B" }
+        - { subject: CALCULUS, number: "1501A/B" }
+        - { subject: MATH, number: "1600A/B" }
+        - { subject: NMM, number: "1411A/B" }
+        - { subject: NMM, number: "1412A/B" }
+        - { subject: NMM, number: "1414A/B" }
+  notes:
+    - "Students not registered in the Computer Science program may only enrol in up to 1.5 courses from Computer Science per academic year."
+
+module:
+  totalCredits: 6.0
+  requirements:
+    - id: core-7
+      type: allOf
+      label: "Core Computer Science courses"
+      credits: 3.5
+      courses:
+        - { subject: COMPSCI, number: "2208A/B" }
+        - { subject: COMPSCI, number: "2209A/B" }
+        - { subject: COMPSCI, number: "2210A/B" }
+        - { subject: COMPSCI, number: "2211A/B" }
+        - { subject: COMPSCI, number: "2212A/B/Y" }
+        - { subject: COMPSCI, number: "3305A/B" }
+        - { subject: COMPSCI, number: "3307A/B/Y" }
+    - id: discrete-choice
+      type: oneOf
+      credits: 0.5
+      courses:
+        - { subject: COMPSCI, number: "2214A/B" }
+        - { subject: MATH, number: "2155F/G" }
+    - id: senior-choice
+      type: creditsFromList
+      credits: 2.0
+      list:
+        - { subject: COMPSCI, minLevel: 3000 }
+        - { subject: DATASCI, number: "3000A/B" }
+        - { subject: SCIENCE, number: "3377A/B" }
+        - { subject: MATH, number: "2156A/B" }
+        - { subject: MATH, number: "3159A/B" }

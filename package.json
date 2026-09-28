@@ -1,0 +1,24 @@
+{
+  "name": "western-course-selection",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "dev": "pnpm --filter @wcs/web dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "db:generate": "pnpm --filter @wcs/db generate",
+    "db:migrate": "pnpm --filter @wcs/db migrate",
+    "db:seed": "pnpm --filter @wcs/db seed",
+    "db:studio": "pnpm --filter @wcs/db studio",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "typescript": "^5.6.3"
+  }
+}
