@@ -431,12 +431,27 @@ Seeded students (5–8, all in `packages/db/seed/students.ts`):
   planned for v1); the recurring pre-validation scan runs every 60s in dev
   (`WORKERS_SCAN_INTERVAL_MS`) rather than a longer production interval.
 
-**Phase 5 — Academic record + counsellor portal**
-- Student-facing academic file, counsellor one-page summary + tabs, access
-  log visible to the student, role-based scoping (advising relationship
-  required).
-- Acceptance: counsellor A cannot see student not assigned to them; every
-  view/edit produces an `AccessLogEntry`; student can see that log.
+**Phase 5 — Academic record + counsellor portal** *(built 2026-09-28)*
+- Student-facing academic file (`/academic-file`), counsellor one-page
+  summary + tabs (`/counsellor/[studentId]`) with a caseload roster
+  (`/counsellor`), access log visible to the student, role-based scoping via
+  `CounsellorStudent` (advising relationship required, admins see everyone).
+- Acceptance: proven, not just asserted. `packages/core/test/access.test.ts`
+  unit-tests `canViewAcademicFile`/`canEditAcademicFile` for all nine
+  viewer/target combinations. `e2e/academic-record.spec.ts` drives it live
+  against real seeded data: a counsellor viewing an unassigned student's
+  detail URL directly gets a real HTTP 404 (`assertCanViewAcademicFile`
+  calls Next's `notFound()`, never revealing whether the student exists);
+  a counsellor viewing/editing an assigned student produces real
+  `AccessLogEntry` rows, and the student then sees both the view and the
+  edit in "Who has viewed your file" on their own `/academic-file`.
+- Known v1 limitations: `AdvisingNote.supersedesId` (append-only
+  corrections) is schema-ready but has no correction UI yet — only new-note
+  creation; counsellor caseloads are a simple fixed `CounsellorStudent`
+  assignment (2 counsellors, seeded 4-and-4), not a real advising-intake
+  workflow; `AccommodationTicket`/`PetitionException` have no edit/creation
+  UI, only fixture data and read views (out of scope — no medical detail is
+  stored, matching the schema's own comment).
 
 **Phase 6 — Chatbot**
 - Calendar chunk ingestion → pgvector, RAG retrieval with citations, tool

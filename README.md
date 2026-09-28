@@ -5,9 +5,11 @@ experience, scoped to the Faculty of Science. See `PLAN.md` for the full
 architecture and phase breakdown, `CLAUDE.md` for conventions and key
 decisions, and `DATA_TODO.md` for seed-data caveats.
 
-**Status:** Phases 1–4 complete — scaffold/seed/auth, degree audit engine,
-course search + schedule builder, and the enrollment engine (intents,
-pre-validation, atomic appointment-time commit, load simulator).
+**Status:** Phases 1–5 complete — scaffold/seed/auth, degree audit engine,
+course search + schedule builder, the enrollment engine (intents,
+pre-validation, atomic appointment-time commit, load simulator), and the
+academic record + counsellor portal (student-facing file, counsellor
+caseload + one-page summary, role-based access with a live access log).
 
 ## Prerequisites
 
@@ -79,13 +81,16 @@ real Western SSO available here. Pick any of them to sign in.
   from the live Western Academic Calendar. The degree audit engine, the
   course search + schedule builder, and the enrollment engine (intents,
   pre-validation, atomic appointment-time seat commit) are fully working
-  against this real catalog data.
+  against this real catalog data. The academic record + counsellor portal's
+  access control (advising-relationship scoping, access logging) is fully
+  working logic — the notes/tickets/petitions it displays are fixture data.
 - **Mocked:** authentication (dev login list; real Entra ID wiring exists but
-  is off by default), the student record system, and the entire timetable
+  is off by default), the student record system, the entire timetable
   (every `Section` — days/times/instructor/capacity — is synthetically
-  generated, since no real Western timetable feed exists to mock against).
-- **Not built yet:** the academic record + counsellor portal, and the
-  chatbot — see `PLAN.md`'s phase list.
+  generated, since no real Western timetable feed exists to mock against),
+  and the advising notes/accommodation tickets/petition records shown in the
+  counsellor portal (fabricated fixtures, not real Western advising data).
+- **Not built yet:** the chatbot — see `PLAN.md`'s phase list.
 
 ## Commands
 

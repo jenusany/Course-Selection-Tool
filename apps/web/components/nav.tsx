@@ -12,6 +12,14 @@ export function Nav({ name, role }: { name: string; role: string }) {
               <Link href="/dashboard" className="hover:text-western-purple">Dashboard</Link>
               <Link href="/plan" className="hover:text-western-purple">Course selection</Link>
               <Link href="/enrollment" className="hover:text-western-purple">Enrollment</Link>
+              <Link href="/academic-file" className="hover:text-western-purple">Academic file</Link>
+            </nav>
+          )}
+          {(role === "COUNSELLOR" || role === "ADMIN") && (
+            <nav className="flex items-center gap-4 text-sm text-neutral-600">
+              <Link href="/counsellor" className="hover:text-western-purple">
+                {role === "ADMIN" ? "All students" : "Your caseload"}
+              </Link>
             </nav>
           )}
         </div>

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { prisma } from "@wcs/db";
 import { auth } from "@/lib/auth";
 import { Nav } from "@/components/nav";
@@ -12,19 +13,7 @@ export default async function DashboardPage() {
 
   const { user } = session;
 
-  if (user.role !== "STUDENT") {
-    return (
-      <>
-        <Nav name={user.name ?? user.email ?? ""} role={user.role} />
-        <main className="mx-auto max-w-3xl px-4 py-12">
-          <h1 className="text-xl font-semibold">{user.role === "COUNSELLOR" ? "Counsellor" : "Admin"} portal</h1>
-          <p className="mt-2 text-neutral-600">
-            Coming in a later phase. Signed in as {user.name} ({user.email}).
-          </p>
-        </main>
-      </>
-    );
-  }
+  if (user.role !== "STUDENT") redirect("/counsellor");
 
   const student = await prisma.student.findUnique({
     where: { userId: user.id },

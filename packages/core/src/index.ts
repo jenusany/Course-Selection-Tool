@@ -14,3 +14,4 @@ export * from "./validation/schedule.js";
 export * from "./search.js";
 export * from "./enrollment/fingerprint.js";
 export * from "./enrollment/validate.js";
+export * from "./access/scope.js";

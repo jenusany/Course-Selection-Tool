@@ -3,6 +3,7 @@ import { loadRequirementSet } from "../../src/requirements.js";
 import { seedCourses } from "./lib/courses.js";
 import { seedPrograms } from "./lib/programs.js";
 import { seedStudents } from "./students.js";
+import { seedAcademicFile } from "./lib/academic-file.js";
 
 const prisma = new PrismaClient();
 
@@ -13,6 +14,7 @@ async function main() {
   const courseIdByKey = await seedCourses(prisma, requirements.modules.values());
   const programIdByCode = await seedPrograms(prisma, requirements.modules.values());
   await seedStudents(prisma, courseIdByKey, programIdByCode);
+  await seedAcademicFile(prisma);
   console.log("Done.");
 }
 

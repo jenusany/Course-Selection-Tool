@@ -196,6 +196,31 @@ syntax error pointing at a box-drawing character in the migration file).
   contain :" — hit this for real on the very first live commit-job test);
   `commitJobId`/`preValidationJobId` in `packages/workers/src/queues.ts` use
   `-` and are the one place job ids get built, with a test pinning it.
+- **Academic record + counsellor portal** (`apps/web/lib/academic-file.ts`,
+  `apps/web/app/academic-file`, `apps/web/app/counsellor`, Phase 5):
+  `packages/core/src/access/scope.ts`'s `canViewAcademicFile`/
+  `canEditAcademicFile` are the one place access is decided — a student may
+  view (never edit) their own file, a counsellor only if a `CounsellorStudent`
+  row links them to the student, an admin always. `assertCanViewAcademicFile`
+  (`apps/web/lib/academic-file.ts`) calls this and then Next's `notFound()`
+  on denial — a 404, not a 403, so an unassigned counsellor can't distinguish
+  "not your student" from "doesn't exist." Every call site follows the assert
+  with `recordAccess(...)`, which writes a real `AccessLogEntry`; there's no
+  separate "should I log this" logic — viewing the page *is* the log write.
+  `apps/web/lib/counsellor-actions.ts`'s `addAdvisingNote` re-derives and
+  re-checks the advising relationship server-side from the session (never
+  trusts a client-supplied studentId), matching the same pattern as
+  `schedule-actions.ts`/`enrollment-actions.ts`. The counsellor one-pager
+  (`/counsellor/[studentId]`) uses the existing (previously unused) shadcn
+  `Tabs` component with all tab content server-rendered up front and passed
+  in as children — no client-side data fetching needed, Radix just
+  shows/hides via CSS. `/dashboard` redirects `COUNSELLOR`/`ADMIN` sessions
+  straight to `/counsellor` so there's one canonical home per role; mock
+  login always redirects to `/dashboard` regardless of role and relies on
+  that onward redirect. Counsellor caseloads and advising-note/accommodation/
+  petition fixtures are seeded by `packages/db/prisma/seed/lib/academic-file.ts`
+  (2 counsellors, 4 students each) — fabricated, not real advising records
+  (see `DATA_TODO.md`).
 - **Monorepo tool: pnpm workspaces only**, no Turborepo/Nx — flagged as an
   intentional deviation from a literal reading of the original stack list,
   approved during planning; revisit only if build caching actually becomes a

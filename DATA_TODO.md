@@ -61,6 +61,15 @@ scraped directly from the live 2026 calendar at `westerncalendar.uwo.ca` on
   HSp, not just the 11 core courses — is 69.86%, making the "just under 70%"
   fixture actually test that.)
 
+- **Counsellor caseloads, advising notes, accommodation tickets, and
+  petition/exception records** (`packages/db/prisma/seed/lib/academic-file.ts`,
+  Phase 5) are entirely fabricated fixture data — a fixed 4-and-4 split of
+  the 8 seeded students between the 2 seeded counsellors, and a handful of
+  notes/tickets/petitions written to exercise the counsellor portal end to
+  end (e.g. tying Sofia Marchetti's advising note to her existing
+  document-missing hold, and Jordan Whitfield's petition to her existing
+  antirequisite-conflict fixture). Not real Western advising records.
+
 ## Scope simplifications
 
 - **Breadth Category A electives** (`PSYCHOL 1000`, `ECONOMIC 1021A/B`,
