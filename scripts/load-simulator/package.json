@@ -1,0 +1,21 @@
+{
+  "name": "@wcs/load-simulator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "simulate": "tsx index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@wcs/core": "workspace:*",
+    "@wcs/db": "workspace:*",
+    "@wcs/workers": "workspace:*",
+    "bullmq": "^5.21.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.10",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  }
+}

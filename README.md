@@ -5,8 +5,9 @@ experience, scoped to the Faculty of Science. See `PLAN.md` for the full
 architecture and phase breakdown, `CLAUDE.md` for conventions and key
 decisions, and `DATA_TODO.md` for seed-data caveats.
 
-**Status:** Phase 1 (scaffold, Docker, Prisma schema, seed data, mock auth,
-basic layout) complete.
+**Status:** Phases 1–4 complete — scaffold/seed/auth, degree audit engine,
+course search + schedule builder, and the enrollment engine (intents,
+pre-validation, atomic appointment-time commit, load simulator).
 
 ## Prerequisites
 
@@ -40,8 +41,18 @@ long time. If you hit the same thing:
   ```
   Then set `DATABASE_URL="postgresql://wcs@localhost:5432/wcs"` in `.env`
   (note: no password — `--auth=trust` is fine for local dev only).
-- **Redis**: not needed until Phase 4 (BullMQ). Cross that bridge later —
-  either retry Homebrew then, or use a precompiled Redis binary.
+- **Redis**: same story — Homebrew's `redis` formula pulls in ~18 build-tool
+  dependencies (cmake, rust, llvm, autoconf...) on top of the missing-bottle
+  problem. Redis's own build is just a Makefile with no external
+  dependencies beyond a C compiler, so building it directly from the GitHub
+  release tarball (not via Homebrew) is fast and avoids all of this:
+  ```sh
+  curl -sL -o redis.tar.gz https://github.com/redis/redis/archive/refs/tags/8.10.2.tar.gz
+  tar xzf redis.tar.gz && cd redis-8.10.2 && make -j4   # ~40s, no external deps
+  mkdir -p ~/redis-local && cp src/redis-server src/redis-cli ~/redis-local/
+  ~/redis-local/redis-server --daemonize yes --port 6379 --dir ~/redis-local --logfile ~/redis-local/redis.log
+  ```
+  `REDIS_URL="redis://localhost:6379"` in `.env` already matches this.
 
 ## Setup
 
@@ -51,7 +62,8 @@ cp .env.example .env          # already done in a fresh checkout of this repo
 docker compose up -d          # Postgres (pgvector) + Redis
 pnpm db:migrate
 pnpm db:seed
-pnpm dev
+pnpm dev                          # apps/web
+pnpm --filter @wcs/workers start  # separate process — the enrollment engine's queue workers
 ```
 
 Then open http://localhost:3000 — you'll land on `/login`, which lists the
@@ -64,14 +76,16 @@ real Western SSO available here. Pick any of them to sign in.
   descriptions, prerequisite/antirequisite text, credit weights), the four
   seeded modules' requirements, and the Faculty of Science degree-level rules
   (breadth, essay, honours average, credit limits) — all scraped directly
-  from the live Western Academic Calendar.
+  from the live Western Academic Calendar. The degree audit engine, the
+  course search + schedule builder, and the enrollment engine (intents,
+  pre-validation, atomic appointment-time seat commit) are fully working
+  against this real catalog data.
 - **Mocked:** authentication (dev login list; real Entra ID wiring exists but
   is off by default), the student record system, and the entire timetable
   (every `Section` — days/times/instructor/capacity — is synthetically
   generated, since no real Western timetable feed exists to mock against).
-- **Not built yet:** the degree audit engine, course search/schedule builder,
-  enrollment engine, counsellor portal, and chatbot — see `PLAN.md`'s phase
-  list.
+- **Not built yet:** the academic record + counsellor portal, and the
+  chatbot — see `PLAN.md`'s phase list.
 
 ## Commands
 

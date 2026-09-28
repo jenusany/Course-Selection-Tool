@@ -22,6 +22,7 @@
     "@radix-ui/react-tooltip": "^1.2.16",
     "@wcs/core": "workspace:*",
     "@wcs/db": "workspace:*",
+    "@wcs/workers": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.451.0",

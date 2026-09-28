@@ -19,13 +19,18 @@ apps/web            Next.js App Router app (UI, API routes, auth)
 packages/core        Framework-independent business logic (audit, validation,
                      enrollment, provider *interfaces*). No Prisma/Next imports.
 packages/db          Prisma schema, migrations, seed data, mock provider impls
-packages/workers      BullMQ queues/processors (Phase 4+)
+packages/workers      BullMQ queues/processors (enrollment engine, Phase 4)
 packages/chatbot      RAG ingestion + tool orchestration (Phase 6+)
 packages/config       Shared tsconfig base
 requirements/         Declarative YAML: degree rules + module requirements
-scripts/load-simulator  N-student enrollment load simulator (Phase 4+)
-e2e/                 Playwright specs (schedule builder happy path so far)
+scripts/load-simulator  N-student enrollment load simulator (Phase 4)
+e2e/                 Playwright specs (schedule builder + enrollment submit)
 ```
+
+`pnpm-workspace.yaml` globs `apps/*`, `packages/*`, **and `scripts/*`** — the
+last one was missing until Phase 4 needed `scripts/load-simulator` to be a
+real workspace package (own `package.json`, resolves `@wcs/*` deps). If you
+add another top-level `scripts/<name>` package, it's already covered.
 
 `apps/web/app/` is currently flat (`dashboard/`, `login/`, `plan/`), not the
 route-grouped `(student)/(counsellor)/(admin)` layout PLAN.md's repo-layout
@@ -155,6 +160,42 @@ syntax error pointing at a box-drawing character in the migration file).
   `playwright.config.ts` — the app needs a seeded Postgres that Playwright
   itself can't provision, so start `pnpm dev` (with a real DB migrated +
   seeded) yourself first, same as manual testing.
+- **Enrollment engine** (`packages/workers`, `packages/db/src/enrollment.ts`,
+  Phase 4): `EnrollmentIntent` is created by `apps/web/lib/enrollment-actions.ts`
+  (`submitEnrollmentPlan`) from a schedule marked as the enrollment plan, and
+  a BullMQ commit job is delayed exactly to the student's real
+  `enrollmentAppointment` (`scheduleCommitJob`) — no seat is ever reserved
+  early. A recurring scan job (every `WORKERS_SCAN_INTERVAL_MS`, default 60s)
+  finds intents due within 72h and pre-validates them
+  (`findIntentsDueForPreValidation` → `preValidateIntent`), storing a
+  `PreValidationResult` keyed by `computeEnrollmentFingerprint` (order-
+  independent hash of student record version + hold versions + section
+  versions — deliberately *not* `node:crypto`, since `packages/core` is
+  imported by client components too). At commit time
+  (`commitEnrollmentIntent`), a matching fingerprint reuses the cached
+  result; a mismatch re-validates fully. Per-item validation reuses Phase
+  3's `validateEnrollmentIntent`/`validateScheduleAddition` (falls back
+  preferred → fallback section → "none"). The only place a seat is actually
+  taken is `commitSeat`'s conditional `UPDATE ... WHERE "enrolledCount" <
+  "capacity" RETURNING *` — no app-level locking, the WHERE clause *is* the
+  concurrency control (proven under real concurrent load in
+  `packages/db/test/enrollment-commit.test.ts` and the load simulator).
+  Idempotency is a real DB constraint (`Enrollment` is unique on
+  `(studentId, courseId, term, year)`), not just "processors try to be
+  careful" — a retried job that already succeeded hits the constraint and
+  no-ops. `packages/workers` runs as its own process
+  (`pnpm --filter @wcs/workers start`) — separate from `apps/web` on
+  purpose, since the commit queue's concurrency cap is the admission-control
+  mechanism, and that only means something as a fixed number of real
+  worker slots, not something serverless request handlers can enforce.
+  `scripts/load-simulator` (`pnpm --filter @wcs/load-simulator simulate [N] [concurrency]`)
+  spins up its *own* temporary `Worker` on the same queue to measure — stop
+  any already-running `pnpm --filter @wcs/workers start` process first, or
+  the two consumers split the jobs and skew the concurrency numbers.
+  **BullMQ custom job ids can't contain `:`** (throws "Custom Id cannot
+  contain :" — hit this for real on the very first live commit-job test);
+  `commitJobId`/`preValidationJobId` in `packages/workers/src/queues.ts` use
+  `-` and are the one place job ids get built, with a test pinning it.
 - **Monorepo tool: pnpm workspaces only**, no Turborepo/Nx — flagged as an
   intentional deviation from a literal reading of the original stack list,
   approved during planning; revisit only if build caching actually becomes a
@@ -172,6 +213,20 @@ estimated or invented. `DATA_TODO.md` lists the specific exceptions (one
 course code referenced by a module that couldn't be found in the current
 catalog; a handful of non-Science elective courses seeded thinly just to make
 breadth Category A/B testable).
+
+## Manual DB verification hygiene
+
+When testing something live against the seeded dev DB (e.g. via `psql` or a
+scratch script), **scope cleanup deletes by specific row id, never by a
+broad filter like `studentId` alone** — the 8 seeded personas have real
+Enrollment/Hold/etc. rows mixed in with whatever test data you just created
+against the same student, and a `DELETE ... WHERE "studentId" = $1` takes
+those out too. Hit this for real once (wiped and had to manually restore
+Marcus Chen's seeded enrollment history from his `PERSONAS` entry in
+`students.ts` — recoverable because the fixture data is in version control,
+but avoid needing to). Prefer creating disposable scratch rows (a throwaway
+Course/Student, like `packages/db/test/enrollment-commit.test.ts` and
+`scripts/load-simulator` both do) over touching real seeded rows at all.
 
 ## Conventions
 

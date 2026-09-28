@@ -12,3 +12,5 @@ export * from "./audit/evaluate.js";
 export * from "./audit/engine.js";
 export * from "./validation/schedule.js";
 export * from "./search.js";
+export * from "./enrollment/fingerprint.js";
+export * from "./enrollment/validate.js";

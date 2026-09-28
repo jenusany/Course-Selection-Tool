@@ -222,6 +222,9 @@ model Enrollment {
   status    EnrollmentStatus
   createdAt DateTime         @default(now())
 
+  // Idempotency guard for the enrollment commit worker: a retried job that
+  // already succeeded hits this constraint instead of double-enrolling.
+  @@unique([studentId, courseId, term, year])
   @@index([studentId, status])
 }
 
@@ -277,6 +280,11 @@ model EnrollmentIntent {
 
   preValidationResults PreValidationResult[]
   attempts             EnrollmentAttempt[]
+
+  @@index([status, appointmentTime])
+  // One open (non-terminal) intent per student/term/year — a new enrollment
+  // plan submission should replace, not duplicate, an existing intent.
+  @@unique([studentId, term, year])
 }
 
 model PreValidationResult {
@@ -292,10 +300,13 @@ model EnrollmentAttempt {
   id         String           @id @default(cuid())
   intentId   String
   intent     EnrollmentIntent @relation(fields: [intentId], references: [id])
+  courseId   String?
   sectionId  String?
   outcome    String
   reason     String?
   createdAt  DateTime         @default(now())
+
+  @@index([intentId, sectionId])
 }
 
 // ── Academic file ─────────────────────────────────────────────────────

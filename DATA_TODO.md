@@ -104,6 +104,16 @@ scraped directly from the live 2026 calendar at `westerncalendar.uwo.ca` on
   non-blocking "you may need Dean's permission" warning. Revisit if a real
   per-term overload threshold is ever sourced from the calendar.
 
+## Known harmless build warning
+
+`pnpm --filter @wcs/web build` prints a webpack warning about
+`@valkey/valkey-glide` not being resolvable from `bullmq`'s
+`valkey-glide-client.js`. `bullmq` optionally supports two Redis client
+backends (`ioredis`, which this project uses, and `valkey-glide`, which it
+doesn't); webpack can't statically tree-shake the unused branch, so it warns
+at build time even though that code path never executes. The build still
+succeeds and every route generates correctly — confirmed by running it.
+
 ## Curated course selection
 
 The full course lists for COMPSCI (72), BIOLOGY (92), MATH (65), and several

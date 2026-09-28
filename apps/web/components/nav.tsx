@@ -11,6 +11,7 @@ export function Nav({ name, role }: { name: string; role: string }) {
             <nav className="flex items-center gap-4 text-sm text-neutral-600">
               <Link href="/dashboard" className="hover:text-western-purple">Dashboard</Link>
               <Link href="/plan" className="hover:text-western-purple">Course selection</Link>
+              <Link href="/enrollment" className="hover:text-western-purple">Enrollment</Link>
             </nav>
           )}
         </div>

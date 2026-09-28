@@ -407,12 +407,29 @@ Seeded students (5–8, all in `packages/db/seed/students.ts`):
   highlighting only checks time overlap, not the section's other conflict
   types.
 
-**Phase 4 — Enrollment engine**
+**Phase 4 — Enrollment engine** *(built 2026-09-28)*
 - Intents, pre-validation worker, fingerprinting, commit worker with
   concurrency cap, load simulator with before/after numbers.
 - Acceptance: simulator report showing pre-validation reduces appointment-
   time latency/throughput bottleneck; unit tests on fingerprint/atomic seat
   check race conditions.
+  - Both proven for real, not just asserted: `packages/db/test/enrollment-commit.test.ts`
+    fires 25/40 concurrent `commitSeat` calls against a live Postgres section
+    with 1/10 seats and gets exactly 1/10 successes every time; a full
+    end-to-end run (real BullMQ job → commit worker → atomic seat commit →
+    `Enrollment` row) was driven manually and via Playwright
+    (`e2e/enrollment.spec.ts`). `pnpm --filter @wcs/load-simulator simulate 3000 10`
+    ran 3000 synthetic arrivals against a 1500-seat section: exactly 1500
+    enrolled every run (never oversubscribed), pre-validation gave a real
+    ~1.16–1.6x wall-time speedup (more pronounced at lower concurrency /
+    smaller N, since queueing dominates less of the total).
+- Known v1 limitations: the commit worker always fully re-validates when the
+  fingerprint doesn't match (not just "what changed", per the original
+  design note); `DEFAULT_MAX_CREDITS_PER_TERM`/program-restriction checks
+  reuse Phase 3's `validateScheduleAddition`, so the same soft credit-load
+  default applies here too; status is polling-only (no SSE/websocket, as
+  planned for v1); the recurring pre-validation scan runs every 60s in dev
+  (`WORKERS_SCAN_INTERVAL_MS`) rather than a longer production interval.
 
 **Phase 5 — Academic record + counsellor portal**
 - Student-facing academic file, counsellor one-page summary + tabs, access
