@@ -50,7 +50,7 @@ export function WeeklyCalendar({ blocks }: { blocks: CalendarBlock[] }) {
           {hours.map((h) => (
             <div
               key={h}
-              className="absolute left-0 right-0 -translate-y-1/2 px-2 text-right text-[11px] text-neutral-400"
+              className="absolute left-0 right-0 -translate-y-1/2 px-2 text-right text-[11px] text-neutral-600"
               style={{ top: `${clampPercent((h - START_HOUR) * 60)}%` }}
             >
               {h % 12 === 0 ? 12 : h % 12}

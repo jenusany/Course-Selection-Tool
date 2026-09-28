@@ -244,8 +244,8 @@ export function DegreeProgress({ audit }: { audit: DegreeAuditResult }) {
         </ul>
       </Card>
 
-      <details className="text-xs text-neutral-400">
-        <summary className="cursor-pointer">Not checked by this audit</summary>
+      <details className="text-xs text-neutral-600">
+        <summary className="cursor-pointer rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-western-purple">Not checked by this audit</summary>
         <ul className="mt-1 list-inside list-disc space-y-0.5">
           {audit.notEvaluated.map((n) => (
             <li key={n}>{n}</li>

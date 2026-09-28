@@ -1,7 +1,8 @@
 # PLAN.md — Western Course Selection Platform (Faculty of Science, First Draft)
 
-Status: **DRAFT — awaiting approval**. Nothing outside this file (and the quick
-reachability check on `westerncalendar.uwo.ca` noted below) has been created yet.
+Status: **All 7 phases built** (2026-09-28). See §11 for what was built in
+each phase, what's proven vs. asserted, and known v1 limitations; see
+`README.md` for setup and a demo script through every seeded student.
 
 ---
 
@@ -431,26 +432,105 @@ Seeded students (5–8, all in `packages/db/seed/students.ts`):
   planned for v1); the recurring pre-validation scan runs every 60s in dev
   (`WORKERS_SCAN_INTERVAL_MS`) rather than a longer production interval.
 
-**Phase 5 — Academic record + counsellor portal**
-- Student-facing academic file, counsellor one-page summary + tabs, access
-  log visible to the student, role-based scoping (advising relationship
-  required).
-- Acceptance: counsellor A cannot see student not assigned to them; every
-  view/edit produces an `AccessLogEntry`; student can see that log.
+**Phase 5 — Academic record + counsellor portal** *(built 2026-09-28)*
+- Student-facing academic file (`/academic-file`), counsellor one-page
+  summary + tabs (`/counsellor/[studentId]`) with a caseload roster
+  (`/counsellor`), access log visible to the student, role-based scoping via
+  `CounsellorStudent` (advising relationship required, admins see everyone).
+- Acceptance: proven, not just asserted. `packages/core/test/access.test.ts`
+  unit-tests `canViewAcademicFile`/`canEditAcademicFile` for all nine
+  viewer/target combinations. `e2e/academic-record.spec.ts` drives it live
+  against real seeded data: a counsellor viewing an unassigned student's
+  detail URL directly gets a real HTTP 404 (`assertCanViewAcademicFile`
+  calls Next's `notFound()`, never revealing whether the student exists);
+  a counsellor viewing/editing an assigned student produces real
+  `AccessLogEntry` rows, and the student then sees both the view and the
+  edit in "Who has viewed your file" on their own `/academic-file`.
+- Known v1 limitations: `AdvisingNote.supersedesId` (append-only
+  corrections) is schema-ready but has no correction UI yet — only new-note
+  creation; counsellor caseloads are a simple fixed `CounsellorStudent`
+  assignment (2 counsellors, seeded 4-and-4), not a real advising-intake
+  workflow; `AccommodationTicket`/`PetitionException` have no edit/creation
+  UI, only fixture data and read views (out of scope — no medical detail is
+  stored, matching the schema's own comment).
 
-**Phase 6 — Chatbot**
-- Calendar chunk ingestion → pgvector, RAG retrieval with citations, tool
-  call into the audit engine for personal questions, Anthropic + Ollama
-  provider implementations, scope guardrails (redirect to a real counsellor
-  for exceptions/appeals/accommodations/standing).
-- Acceptance: test prompts showing (a) a policy question answered with a
-  citation, (b) a personal question invoking the audit tool rather than
-  guessing, (c) an out-of-scope question politely redirected.
+**Phase 6 — Chatbot** *(built 2026-09-28)*
+- Calendar chunk ingestion → pgvector (`/chat`, `apps/web/app/api/chat`),
+  RAG retrieval with citations, tool call into the audit engine for personal
+  questions, Anthropic + Ollama provider implementations (code-complete,
+  untested live — no key/local server in this environment), scope
+  guardrails (redirect to a real counsellor for exceptions/appeals/
+  accommodations/standing/medical/financial aid).
+- Acceptance: proven, not just asserted, three ways for the same three
+  prompts — `packages/chatbot/test/orchestrate.test.ts` (unit-level, live
+  seeded DB, deterministic `MockChatModelProvider`), `e2e/chatbot.spec.ts`
+  (full browser flow through the real `/chat` UI and `/api/chat` route),
+  and `packages/chatbot/test/retrieve.test.ts` (proves the retrieval step
+  itself is real pgvector ANN search, not string matching): (a) "What is
+  the prerequisite for COMPSCI 2210A/B?" → answered with a `[1]` citation
+  linking the real calendar page; (b) "Am I on track to finish my Computer
+  Science module?" → calls `get_degree_audit`, answers from the real audit
+  result, never guesses; (c) "Can I petition for an antirequisite
+  exception?" → redirected to a real academic counsellor, no model/DB call
+  for the audit at all.
+- Known v1 limitations: `CalendarChunk` embeddings are a deterministic
+  hashing-trick mock, not a real ML embedding model (see `DATA_TODO.md`) —
+  genuinely wired to pgvector, just not semantically-aware the way a real
+  embedding would be (won't generalize across synonyms/paraphrase); citations
+  shown are every retrieved chunk, not only the ones the model's answer text
+  actually cited; the Anthropic/Ollama providers map `ChatMessage`'s
+  simplified role set onto each API's native shape in a best-effort way
+  (no native `tool_result` blocks) and are untested against a live
+  API/server; chat history is passed per-request from the client, not
+  persisted server-side (`ChatSession`/`ChatMessage` tables were optional
+  per the original plan and were skipped for v1).
 
-**Phase 7 — Polish**
+**Phase 7 — Polish** *(built 2026-09-28)*
 - WCAG AA pass (keyboard nav, contrast, aria), mobile layout, empty/error
   states, README with setup + a demo script walking through every seeded
   student end to end.
+- Acceptance: proven with automated tooling, not eyeballed. `e2e/accessibility.spec.ts`
+  runs a real `axe-core` scan (`@axe-core/playwright`, WCAG 2.1 A/AA tags)
+  against all 8 major pages/roles — 0 violations — plus dedicated keyboard-
+  operability tests (tab to a control, activate with Enter/Space, no mouse)
+  and mobile-viewport tests (375px, asserting zero horizontal overflow) on
+  6 pages. `e2e/empty-states.spec.ts` drives every page as Priya Nakamura,
+  the intentionally-empty first-year fixture (no programs, no completed
+  courses, no holds), confirming real empty-state copy renders instead of
+  erroring. `e2e/error-states.spec.ts` proves real error paths: an
+  unauthenticated API request is redirected by `middleware.ts` before ever
+  reaching the route handler (confirmed by not following the redirect,
+  rather than assuming a status code), a malformed request gets a clear
+  400, and both the chat widget and the schedule planner surface a failed
+  network request through a visible alert rather than failing silently.
+- Real bugs found and fixed by actually running the scans (not just
+  fixed speculatively): the shared `Nav` header overflowed horizontally at
+  375px because none of its flex rows wrapped; the shadcn `TabsList` used
+  on the counsellor one-pager overflowed the same way with 5 triggers on a
+  narrow screen (fixed with `max-w-full overflow-x-auto`, a scrollable tab
+  strip); the Fall/Winter term selector on `/plan` used Radix `Tabs`
+  without any `TabsContent`, which is an invalid ARIA tabs pattern (a tab
+  with no tabpanel) — replaced with a plain `role="group"` toggle-button
+  pair, which is what it semantically is (a filter, not a tabpanel
+  switcher); `text-neutral-400` (used in ~10 places for secondary text —
+  timestamps, remove/delete buttons, the nav role badge) fails WCAG AA
+  contrast on a white background (~2.5:1, needs 4.5:1) — bumped to
+  `text-neutral-600`; shadcn's default `--muted-foreground` token (used by
+  every inactive Radix `Tabs`/`Select` trigger app-wide) also failed at
+  ~4.3:1 on `--muted`'s background — darkened once in `globals.css` rather
+  than patched per-component; the three course-search `Select` filter
+  triggers had no accessible name (critical `button-name` violation) —
+  given explicit `aria-label`s.
+- Known v1 limitations: the automated scan covers the 8 pages' default/
+  static states, not every dynamic sub-state (e.g. the chat widget mid-
+  conversation, an open `Select` dropdown's own contrast) — spot-checked
+  manually, not exhaustively scanned; mobile layout is verified by absence
+  of horizontal overflow at 375px, not a full visual/touch-target audit at
+  every breakpoint; no screen-reader (VoiceOver/NVDA) pass was done, since
+  that's not automatable the way axe-core's static/computed-style checks
+  are — axe-core's own docs note it catches roughly 30-50% of WCAG issues
+  by nature, so this is real, verified progress, not a claim of full
+  compliance.
 
 Each phase ends with: tests run, app run, a short "works / mocked" summary,
 then I stop for your review before starting the next phase.

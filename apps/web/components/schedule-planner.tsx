@@ -29,7 +29,6 @@ import { WeeklyCalendar, type CalendarBlock } from "@/components/weekly-calendar
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -38,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SchedulePlannerProps {
   courses: PlanningCourseDTO[];
@@ -169,6 +169,20 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
     });
   }
 
+  // Courses with at least one addable section (not blocked, not already added)
+  // sort first — searching the whole catalog otherwise buries what you can
+  // actually act on under everything you've completed or can't take.
+  const sortedFiltered = useMemo(() => {
+    const isAddable = (course: PlanningCourseDTO) => {
+      if (!activeSchedule) return false;
+      const already = existingEntries.some((e) => courseKey(e.course) === courseKey(course));
+      if (already) return false;
+      return course.sections.some((s) => s.term === term && !hasBlockingConflict(conflictsFor(course, s)));
+    };
+    return [...filtered].sort((a, b) => Number(isAddable(b)) - Number(isAddable(a)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered, term, existingEntries, activeSchedule]);
+
   function handleCreateSchedule() {
     const name = newName.trim() || `${TERM_LABEL[term]} plan ${termSchedules.length + 1}`;
     startTransition(async () => {
@@ -272,25 +286,34 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
   }, [activeSchedule, courseById, sectionById, hovered, term, existingEntries]);
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_26rem]">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
-          <Tabs value={term} onValueChange={(v) => setTerm(v as Term)}>
-            <TabsList>
-              {TERMS.map((t) => (
-                <TabsTrigger key={t} value={t}>
-                  {TERM_LABEL[t]}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-          <span className="text-xs text-neutral-500">{committedCredits.toFixed(1)} credits in this draft</span>
+          {/* A plain toggle group, not Radix Tabs: this switches a filter, not a tabpanel, so
+              there's no associated tabpanel content for a real ARIA tabs pattern to control. */}
+          <div role="group" aria-label="Select term" className="inline-flex rounded-md border border-neutral-200 bg-white p-1">
+            {TERMS.map((t) => (
+              <button
+                key={t}
+                type="button"
+                aria-pressed={term === t}
+                onClick={() => setTerm(t)}
+                className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
+                  term === t ? "bg-western-purple text-white" : "text-neutral-600 hover:bg-neutral-100"
+                }`}
+              >
+                {TERM_LABEL[t]}
+              </button>
+            ))}
+          </div>
+          <span className="text-xs text-neutral-600">{committedCredits.toFixed(1)} credits in this draft</span>
         </div>
 
         <div className="flex flex-wrap gap-2 rounded-lg border border-neutral-200 bg-white p-3">
           <Input placeholder="Search subject, number, or title" value={query} onChange={(e) => setQuery(e.target.value)} className="w-56" />
           <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-            <SelectTrigger className="w-40"><SelectValue placeholder="Subject" /></SelectTrigger>
+            <SelectTrigger className="w-40" aria-label="Filter by subject"><SelectValue placeholder="Subject" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">All subjects</SelectItem>
               {subjects.map((s) => (
@@ -299,7 +322,7 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
             </SelectContent>
           </Select>
           <Select value={levelFilter} onValueChange={setLevelFilter}>
-            <SelectTrigger className="w-32"><SelectValue placeholder="Level" /></SelectTrigger>
+            <SelectTrigger className="w-32" aria-label="Filter by level"><SelectValue placeholder="Level" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">All levels</SelectItem>
               {levels.map((l) => (
@@ -308,7 +331,7 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
             </SelectContent>
           </Select>
           <Select value={breadthFilter} onValueChange={setBreadthFilter}>
-            <SelectTrigger className="w-36"><SelectValue placeholder="Breadth" /></SelectTrigger>
+            <SelectTrigger className="w-36" aria-label="Filter by breadth category"><SelectValue placeholder="Breadth" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">All breadth</SelectItem>
               {BREADTH_OPTIONS.map((b) => (
@@ -334,7 +357,7 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
         {error && <p role="alert" className="rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-800">{error}</p>}
 
         <ul className="space-y-3">
-          {filtered.map((course) => {
+          {sortedFiltered.map((course) => {
             const badges = badgesByKey.get(courseKey(course)) ?? [];
             const prereqStatus = prereqStatusByCourseId.get(course.id);
             const termSections = course.sections.filter((s) => s.term === term);
@@ -382,9 +405,24 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
                         </div>
                         <div className="flex items-center gap-2">
                           {conflicts.length > 0 && (
-                            <span className={blocked ? "text-red-700" : "text-amber-700"} title={conflicts.map((c) => c.message).join(" ")}>
-                              {blocked ? "Can't add" : "Warning"}
-                            </span>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label={blocked ? "Blocking reason" : "Warning reason"}
+                                  className={`underline decoration-dotted underline-offset-2 ${blocked ? "text-red-700" : "text-amber-700"}`}
+                                >
+                                  {blocked ? "Can't add" : "Warning"}
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs">
+                                <ul className="list-inside list-disc space-y-1">
+                                  {conflicts.map((c, i) => (
+                                    <li key={i}>{c.message}</li>
+                                  ))}
+                                </ul>
+                              </TooltipContent>
+                            </Tooltip>
                           )}
                           <Button
                             size="sm"
@@ -402,7 +440,7 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
               </li>
             );
           })}
-          {filtered.length === 0 && <li className="rounded-lg border border-dashed border-neutral-300 p-6 text-center text-sm text-neutral-500">No courses match these filters.</li>}
+          {sortedFiltered.length === 0 && <li className="rounded-lg border border-dashed border-neutral-300 p-6 text-center text-sm text-neutral-500">No courses match these filters.</li>}
         </ul>
       </div>
 
@@ -416,14 +454,14 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
               <li key={s.id} className={`flex items-center justify-between gap-2 rounded px-2 py-1.5 text-sm ${s.id === activeSchedule?.id ? "bg-western-purple/10" : ""}`}>
                 <button type="button" className="min-w-0 flex-1 truncate text-left" onClick={() => setActiveScheduleId(s.id)}>
                   {s.name} {s.isEnrollmentPlan && <Badge className="ml-1">Enrollment plan</Badge>}
-                  <span className="ml-1 text-xs text-neutral-500">({s.items.length})</span>
+                  <span className="ml-1 text-xs text-neutral-600">({s.items.length})</span>
                 </button>
                 {!s.isEnrollmentPlan && (
                   <button type="button" disabled={isPending} onClick={() => handleMarkEnrollmentPlan(s.id)} className="text-xs text-western-purple underline disabled:opacity-50">
                     Mark as plan
                   </button>
                 )}
-                <button type="button" disabled={isPending} onClick={() => handleDeleteSchedule(s.id)} className="text-xs text-neutral-400 hover:text-red-600 disabled:opacity-50">
+                <button type="button" disabled={isPending} onClick={() => handleDeleteSchedule(s.id)} className="text-xs text-neutral-600 hover:text-red-600 disabled:opacity-50">
                   Delete
                 </button>
               </li>
@@ -451,7 +489,7 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
                     <span>
                       {label(course)} {section && `— ${section.component} ${section.sectionCode}`}
                     </span>
-                    <button type="button" onClick={() => handleRemove(item.id)} className="text-xs text-neutral-400 hover:text-red-600">
+                    <button type="button" onClick={() => handleRemove(item.id)} className="text-xs text-neutral-600 hover:text-red-600">
                       Remove
                     </button>
                   </li>
@@ -463,5 +501,6 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
         )}
       </div>
     </div>
+    </TooltipProvider>
   );
 }

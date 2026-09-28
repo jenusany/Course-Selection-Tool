@@ -3,6 +3,8 @@ import { loadRequirementSet } from "../../src/requirements.js";
 import { seedCourses } from "./lib/courses.js";
 import { seedPrograms } from "./lib/programs.js";
 import { seedStudents } from "./students.js";
+import { seedAcademicFile } from "./lib/academic-file.js";
+import { seedCalendarChunks } from "./lib/calendar-chunks.js";
 
 const prisma = new PrismaClient();
 
@@ -13,6 +15,8 @@ async function main() {
   const courseIdByKey = await seedCourses(prisma, requirements.modules.values());
   const programIdByCode = await seedPrograms(prisma, requirements.modules.values());
   await seedStudents(prisma, courseIdByKey, programIdByCode);
+  await seedAcademicFile(prisma);
+  await seedCalendarChunks(prisma, requirements.modules.values(), requirements.degrees.values());
   console.log("Done.");
 }
 

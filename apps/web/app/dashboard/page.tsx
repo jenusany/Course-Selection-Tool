@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { prisma } from "@wcs/db";
 import { auth } from "@/lib/auth";
 import { Nav } from "@/components/nav";
@@ -12,19 +14,7 @@ export default async function DashboardPage() {
 
   const { user } = session;
 
-  if (user.role !== "STUDENT") {
-    return (
-      <>
-        <Nav name={user.name ?? user.email ?? ""} role={user.role} />
-        <main className="mx-auto max-w-3xl px-4 py-12">
-          <h1 className="text-xl font-semibold">{user.role === "COUNSELLOR" ? "Counsellor" : "Admin"} portal</h1>
-          <p className="mt-2 text-neutral-600">
-            Coming in a later phase. Signed in as {user.name} ({user.email}).
-          </p>
-        </main>
-      </>
-    );
-  }
+  if (user.role !== "STUDENT") redirect("/counsellor");
 
   const student = await prisma.student.findUnique({
     where: { userId: user.id },
@@ -84,9 +74,12 @@ export default async function DashboardPage() {
           </ul>
         </section>
 
-        <p className="mt-10 text-xs text-neutral-400">
-          Course search and the schedule builder land in Phase 3.
-        </p>
+        <nav className="mt-10 flex flex-wrap gap-4 border-t border-neutral-200 pt-4 text-sm" aria-label="Quick links">
+          <Link href="/plan" className="text-western-purple underline">Search courses &amp; build a schedule</Link>
+          <Link href="/enrollment" className="text-western-purple underline">Enrollment</Link>
+          <Link href="/academic-file" className="text-western-purple underline">Your academic file</Link>
+          <Link href="/chat" className="text-western-purple underline">Ask an advisor</Link>
+        </nav>
       </main>
     </>
   );
