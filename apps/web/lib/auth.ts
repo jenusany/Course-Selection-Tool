@@ -5,6 +5,12 @@ import { prisma } from "@wcs/db";
 
 const UWO_EMAIL = /@uwo\.ca$/i;
 
+// Dev-only fixed password for every seeded mock account — there's no real
+// credential store to check against (see CLAUDE.md's Auth section), so this
+// is a shared password, not per-user hashed auth. Override via env if you
+// want a different one for a shared/demo deployment.
+const MOCK_LOGIN_PASSWORD = process.env.MOCK_LOGIN_PASSWORD ?? "test";
+
 const entraConfigured =
   process.env.AUTH_MODE === "entra" &&
   !!process.env.AUTH_ENTRA_ID_TENANT_ID &&
@@ -16,16 +22,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   providers: [
-    // Dev-only mock login: picks a seeded user by email, no password. Listed
-    // on /login only when AUTH_MODE !== "entra". Real deployments should set
-    // AUTH_MODE=entra and drop this provider entirely at build time.
+    // Dev-only mock login: a typed @uwo.ca email + the shared MOCK_LOGIN_PASSWORD
+    // against a seeded user. Listed on /login only when AUTH_MODE !== "entra".
+    // Real deployments should set AUTH_MODE=entra and drop this provider
+    // entirely at build time.
     Credentials({
       id: "mock-login",
       name: "Mock Western Login",
-      credentials: { email: { label: "Email", type: "email" } },
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
       async authorize(credentials) {
         const email = credentials?.email;
+        const password = credentials?.password;
         if (typeof email !== "string" || !UWO_EMAIL.test(email)) return null;
+        if (typeof password !== "string" || password !== MOCK_LOGIN_PASSWORD) return null;
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) return null;
         return { id: user.id, email: user.email, name: user.name, role: user.role };

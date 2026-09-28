@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SchedulePlannerProps {
   courses: PlanningCourseDTO[];
@@ -168,6 +169,20 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
     });
   }
 
+  // Courses with at least one addable section (not blocked, not already added)
+  // sort first — searching the whole catalog otherwise buries what you can
+  // actually act on under everything you've completed or can't take.
+  const sortedFiltered = useMemo(() => {
+    const isAddable = (course: PlanningCourseDTO) => {
+      if (!activeSchedule) return false;
+      const already = existingEntries.some((e) => courseKey(e.course) === courseKey(course));
+      if (already) return false;
+      return course.sections.some((s) => s.term === term && !hasBlockingConflict(conflictsFor(course, s)));
+    };
+    return [...filtered].sort((a, b) => Number(isAddable(b)) - Number(isAddable(a)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered, term, existingEntries, activeSchedule]);
+
   function handleCreateSchedule() {
     const name = newName.trim() || `${TERM_LABEL[term]} plan ${termSchedules.length + 1}`;
     startTransition(async () => {
@@ -271,6 +286,7 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
   }, [activeSchedule, courseById, sectionById, hovered, term, existingEntries]);
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_26rem]">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
@@ -341,7 +357,7 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
         {error && <p role="alert" className="rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-800">{error}</p>}
 
         <ul className="space-y-3">
-          {filtered.map((course) => {
+          {sortedFiltered.map((course) => {
             const badges = badgesByKey.get(courseKey(course)) ?? [];
             const prereqStatus = prereqStatusByCourseId.get(course.id);
             const termSections = course.sections.filter((s) => s.term === term);
@@ -389,9 +405,24 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
                         </div>
                         <div className="flex items-center gap-2">
                           {conflicts.length > 0 && (
-                            <span className={blocked ? "text-red-700" : "text-amber-700"} title={conflicts.map((c) => c.message).join(" ")}>
-                              {blocked ? "Can't add" : "Warning"}
-                            </span>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label={blocked ? "Blocking reason" : "Warning reason"}
+                                  className={`underline decoration-dotted underline-offset-2 ${blocked ? "text-red-700" : "text-amber-700"}`}
+                                >
+                                  {blocked ? "Can't add" : "Warning"}
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs">
+                                <ul className="list-inside list-disc space-y-1">
+                                  {conflicts.map((c, i) => (
+                                    <li key={i}>{c.message}</li>
+                                  ))}
+                                </ul>
+                              </TooltipContent>
+                            </Tooltip>
                           )}
                           <Button
                             size="sm"
@@ -409,7 +440,7 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
               </li>
             );
           })}
-          {filtered.length === 0 && <li className="rounded-lg border border-dashed border-neutral-300 p-6 text-center text-sm text-neutral-500">No courses match these filters.</li>}
+          {sortedFiltered.length === 0 && <li className="rounded-lg border border-dashed border-neutral-300 p-6 text-center text-sm text-neutral-500">No courses match these filters.</li>}
         </ul>
       </div>
 
@@ -470,5 +501,6 @@ export function SchedulePlanner({ courses, initialSchedules, completed, inProgre
         )}
       </div>
     </div>
+    </TooltipProvider>
   );
 }

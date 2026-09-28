@@ -32,6 +32,7 @@ describe("seeded students — expected audit outcomes", () => {
       "derek.osei@uwo.ca",
       "grace.petrov@uwo.ca",
       "jordan.whitfield@uwo.ca",
+      "jyogara@uwo.ca",
       "liam.fontaine@uwo.ca",
       "marcus.chen@uwo.ca",
       "priya.nakamura@uwo.ca",
@@ -197,6 +198,46 @@ describe("seeded students — expected audit outcomes", () => {
       "BIOLOGY 4920F/G/Z",
       "BIOLOGY 4944F/G",
     ]);
+  });
+
+  it("Jenusan (4th-year HSp CS, near graduation, typed-login demo account): same shape as Aisha's fixture, higher grades", () => {
+    const a = auditPersona("jyogara@uwo.ca");
+    const m = a.modules[0]!;
+    expect(m.status).toBe("IN_PROGRESS");
+    expect(statuses(m.requirements)).toEqual({
+      "core-11": "MET",
+      "discrete-choice": "MET",
+      "writing-choice": "MET",
+      capstone: "IN_PROGRESS",
+      "cs-4000-choice": "IN_PROGRESS",
+      "cs-3000-plus-choice": "IN_PROGRESS",
+      "stats-choice": "MET",
+      "module-average": "MET",
+    });
+    expect(keys(moduleReq(a, "hsp-computer-science", "capstone").inProgressBy)).toEqual(["COMPSCI 4490Z"]);
+    expect(keys(moduleReq(a, "hsp-computer-science", "cs-4000-choice").inProgressBy)).toEqual([
+      "COMPSCI 4413A/B",
+      "COMPSCI 4451A/B",
+    ]);
+    expect(keys(moduleReq(a, "hsp-computer-science", "cs-3000-plus-choice").inProgressBy)).toEqual(["COMPSCI 3388A/B"]);
+    expect(m.creditsCompleted).toBe(7.0);
+    expect(m.creditsInProgress).toBe(2.0);
+    expect(moduleReq(a, "hsp-computer-science", "module-average").average?.value).toBe(86);
+    expect(a.creditsCompleted).toBe(13.0);
+    expect(a.creditsInProgress).toBe(2.0);
+    expect(statuses(a.degreeRequirements)).toEqual({
+      "degree-module-combination": "MET",
+      "degree-total-credits": "UNMET",
+      "degree-senior-credits": "UNMET",
+      "degree-breadth-A": "MET",
+      "degree-breadth-B": "UNMET",
+      "degree-breadth-C": "MET",
+      "degree-essay": "UNMET",
+      "degree-essay-senior": "IN_PROGRESS",
+      "degree-cumulative-average": "MET",
+    });
+    expect(a.warnings).toEqual([]);
+    expect(a.advisories).toEqual([]);
   });
 
   it("Liam (borderline honours average): module average 69.86% misses 70%, with the Dean's-permission advisory", () => {

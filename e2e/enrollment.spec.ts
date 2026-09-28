@@ -2,7 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 
 async function loginAs(page: Page, email: string) {
   await page.goto("/login");
-  await page.locator("button", { hasText: email }).click();
+  await page.getByLabel("UWO email").fill(email);
+  await page.getByLabel("Password").fill("test");
+  await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/dashboard/);
 }
 
@@ -22,7 +24,7 @@ test("submitting an enrollment plan queues an intent for the appointment-time co
   await page.getByPlaceholder("Search subject, number, or title").fill("DATASCI 1000");
   const card = page.locator("li", { hasText: "DATASCI 1000A/B" }).first();
   await expect(card).toBeVisible();
-  await card.getByRole("button", { name: "Add" }).first().click();
+  await card.getByRole("button", { name: "Add", exact: true }).first().click();
   await expect(card.getByRole("button", { name: "Added" }).first()).toBeVisible();
 
   const scheduleListItem = page.locator("li", { hasText: scheduleName });

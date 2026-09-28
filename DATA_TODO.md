@@ -51,7 +51,7 @@ scraped directly from the live 2026 calendar at `westerncalendar.uwo.ca` on
   conflict detection; not representative of Western's actual Fall/Winter
   timetable.
 - **Seeded student histories** (`packages/db/prisma/seed/students.ts`) —
-  names, emails, and course/grade histories for the 8 fixture students are
+  names, emails, and course/grade histories for the 9 fixture students are
   fabricated to hit specific test scenarios (on-track, near-graduation,
   antirequisite conflict, active hold, double-module, mid-program, borderline
   honours average). Real course codes and grades are used to keep them
@@ -59,12 +59,19 @@ scraped directly from the live 2026 calendar at `westerncalendar.uwo.ca` on
   students or transcripts. (Phase 2: three of Liam Fontaine's grades were
   lowered so his *full* module average — every course counted toward the
   HSp, not just the 11 core courses — is 69.86%, making the "just under 70%"
-  fixture actually test that.)
+  fixture actually test that. Jenusan Yogarajah, added later as the personal
+  typed-login demo account, reuses Aisha Bello's exact course list with
+  different grades — same near-graduation shape, distinct numbers.)
+- **Every seeded mock-login account shares one fixed dev password**
+  (`MOCK_LOGIN_PASSWORD`, default `"test"`, checked in `apps/web/lib/auth.ts`),
+  not a per-user password hash — there's no real credential store behind
+  mock auth to begin with. Fine for a local dev/demo build; a real deployment
+  sets `AUTH_MODE=entra` instead, which drops this path entirely.
 
 - **Counsellor caseloads, advising notes, accommodation tickets, and
   petition/exception records** (`packages/db/prisma/seed/lib/academic-file.ts`,
-  Phase 5) are entirely fabricated fixture data — a fixed 4-and-4 split of
-  the 8 seeded students between the 2 seeded counsellors, and a handful of
+  Phase 5) are entirely fabricated fixture data — a fixed 5-and-4 split of
+  the 9 seeded students between the 2 seeded counsellors, and a handful of
   notes/tickets/petitions written to exercise the counsellor portal end to
   end (e.g. tying Sofia Marchetti's advising note to her existing
   document-missing hold, and Jordan Whitfield's petition to her existing

@@ -256,6 +256,47 @@ export const PERSONAS: StudentPersona[] = [
     fixtureNote:
       "Borderline honours-average fixture: the module average over every course counted toward the HSp (core-11 plus the discrete-math, writing and stats choices) is 69.86% — just under the 70% cutoff, above the 68% Dean's-permission floor, no mark below 60%. A pinned edge case for the audit engine's average calculation.",
   },
+  {
+    email: "jyogara@uwo.ca",
+    name: "Jenusan Yogarajah",
+    year: 4,
+    programs: [{ code: "hsp-computer-science", isPrimary: true }],
+    completed: [
+      c("COMPSCI 1020A/B", "FALL", 2023, 88),
+      c("COMPSCI 1025A/B", "FALL", 2023, 90),
+      c("COMPSCI 1027A/B", "WINTER", 2024, 87),
+      c("CALCULUS 1000A/B", "FALL", 2023, 84),
+      c("CALCULUS 1301A/B", "WINTER", 2024, 82),
+      c("COMPSCI 2208A/B", "FALL", 2024, 86),
+      c("COMPSCI 2209A/B", "FALL", 2024, 85),
+      c("COMPSCI 2210A/B", "FALL", 2024, 89),
+      c("COMPSCI 2211A/B", "WINTER", 2025, 88),
+      c("COMPSCI 2212A/B/Y", "WINTER", 2025, 84),
+      c("COMPSCI 2214A/B", "FALL", 2024, 90),
+      c("MATH 1600A/B", "FALL", 2024, 85),
+      c("WRITING 2101F/G", "WINTER", 2025, 83),
+      c("COMPSCI 3305A/B", "FALL", 2025, 87),
+      c("COMPSCI 3307A/B/Y", "FALL", 2025, 86),
+      c("COMPSCI 3331A/B", "WINTER", 2026, 85),
+      c("COMPSCI 3340A/B", "WINTER", 2026, 88),
+      c("COMPSCI 3342A/B", "FALL", 2025, 84),
+      c("COMPSCI 3350A/B", "WINTER", 2026, 86),
+      c("STATS 2857A/B", "WINTER", 2026, 83),
+      c("PSYCHOL 1000", "WINTER", 2025, 81),
+      c("ECONOMIC 1021A/B", "FALL", 2023, 79),
+      c("BIOLOGY 1001A", "WINTER", 2025, 80),
+      c("CHEM 1301A/B", "FALL", 2024, 78),
+      c("MATH 1120A/B", "FALL", 2023, 82),
+    ],
+    inProgress: [
+      p("COMPSCI 4490Z", "FALL", 2026),
+      p("COMPSCI 4451A/B", "FALL", 2026),
+      p("COMPSCI 4413A/B", "FALL", 2026),
+      p("COMPSCI 3388A/B", "FALL", 2026),
+    ],
+    fixtureNote:
+      "Personal demo account for the typed email/password login (Phase 7 follow-up) — fourth-year, near graduation, Honours Specialization in Computer Science, same shape as Aisha Bello's fixture with distinct grades.",
+  },
 ];
 
 const COUNSELLORS = [

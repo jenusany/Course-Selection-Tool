@@ -12,7 +12,7 @@ import type { PrismaClient } from "@prisma/client";
  */
 
 const CASELOADS: Record<string, string[]> = {
-  "r.stevens@uwo.ca": ["priya.nakamura@uwo.ca", "marcus.chen@uwo.ca", "aisha.bello@uwo.ca", "derek.osei@uwo.ca"],
+  "r.stevens@uwo.ca": ["priya.nakamura@uwo.ca", "marcus.chen@uwo.ca", "aisha.bello@uwo.ca", "derek.osei@uwo.ca", "jyogara@uwo.ca"],
   "t.abara@uwo.ca": ["sofia.marchetti@uwo.ca", "jordan.whitfield@uwo.ca", "grace.petrov@uwo.ca", "liam.fontaine@uwo.ca"],
 };
 

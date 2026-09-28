@@ -73,9 +73,10 @@ pnpm dev                          # apps/web
 pnpm --filter @wcs/workers start  # separate process — the enrollment engine's queue workers
 ```
 
-Then open http://localhost:3000 — you'll land on `/login`, which lists the
-seeded students (and a couple of counsellor/admin accounts) since there's no
-real Western SSO available here. Pick any of them to sign in.
+Then open http://localhost:3000 — you'll land on `/login`. There's no real
+Western SSO here, so sign in with any seeded `@uwo.ca` email and the shared
+dev password **`test`** (a reference list of every seeded account is right
+below the form).
 
 ## What's real vs. mocked right now
 
@@ -92,7 +93,8 @@ real Western SSO available here. Pick any of them to sign in.
   The advisor chatbot's retrieval, scope guardrails, and audit-tool-calling
   logic are fully working against real calendar text (with real citation
   URLs) and the real audit engine — see below for what's mocked inside it.
-- **Mocked:** authentication (dev login list; real Entra ID wiring exists but
+- **Mocked:** authentication (typed email + a shared dev password, `test`,
+  against seeded accounts; real Entra ID wiring exists but
   is off by default), the student record system, the entire timetable
   (every `Section` — days/times/instructor/capacity — is synthetically
   generated, since no real Western timetable feed exists to mock against),
@@ -109,9 +111,10 @@ real Western SSO available here. Pick any of them to sign in.
 
 ## Demo script
 
-No real Western SSO exists here, so `/login` lists every seeded identity —
-pick one to sign in as. Walking through all 8 students plus both counsellors
-and the admin account exercises every fixture scenario end to end.
+No real Western SSO exists here — sign in at `/login` with any seeded
+`@uwo.ca` email below and the shared dev password **`test`**. Walking
+through all 9 students plus both counsellors and the admin account
+exercises every fixture scenario end to end.
 
 ### Students
 
@@ -153,22 +156,26 @@ and the admin account exercises every fixture scenario end to end.
    cutoff and just above the 68% Dean's-permission floor. Check the
    dashboard audit's average requirement row, and his advising note from
    Tunde Abara about the standing check-in.
+9. **Jenusan Yogarajah** (`jyogara@uwo.ca`) — the personal demo account for
+   the typed login itself: fourth-year, near graduation, Honours
+   Specialization in Computer Science (same shape as Aisha's fixture, with
+   higher grades). Rebecca Stevens is the assigned counsellor.
 
 ### Counsellors and admin
 
-9. **Rebecca Stevens** (`r.stevens@uwo.ca`) — caseload: Priya, Marcus,
-   Aisha, Derek. Lands on `/counsellor` (the dashboard redirects
-   counsellors there); click into a student for the one-page tabbed summary
-   (Overview/Courses/Advising notes/Accommodations & petitions/Access log),
-   and add a note from the Advising notes tab. Then try navigating directly
-   to one of **Tunde's** students' `/counsellor/<id>` URL — it 404s, not a
-   generic error, proving the advising-relationship check (see
-   `e2e/academic-record.spec.ts`).
-10. **Tunde Abara** (`t.abara@uwo.ca`) — caseload: Sofia, Jordan, Grace,
+10. **Rebecca Stevens** (`r.stevens@uwo.ca`) — caseload: Priya, Marcus,
+    Aisha, Derek, Jenusan. Lands on `/counsellor` (the dashboard redirects
+    counsellors there); click into a student for the one-page tabbed summary
+    (Overview/Courses/Advising notes/Accommodations & petitions/Access log),
+    and add a note from the Advising notes tab. Then try navigating directly
+    to one of **Tunde's** students' `/counsellor/<id>` URL — it 404s, not a
+    generic error, proving the advising-relationship check (see
+    `e2e/academic-record.spec.ts`).
+12. **Tunde Abara** (`t.abara@uwo.ca`) — caseload: Sofia, Jordan, Grace,
     Liam. Same portal, opposite caseload — good for the cross-counsellor
     access-denial check above.
-11. **System Administrator** (`admin@uwo.ca`) — `/counsellor` shows **all**
-    8 students regardless of caseload assignment (the one role with
+13. **System Administrator** (`admin@uwo.ca`) — `/counsellor` shows **all**
+    9 students regardless of caseload assignment (the one role with
     unrestricted access, per `canViewAcademicFile` in
     `packages/core/src/access/scope.ts`).
 
