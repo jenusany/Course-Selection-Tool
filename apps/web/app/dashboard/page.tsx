@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@wcs/db";
 import { auth } from "@/lib/auth";
@@ -73,9 +74,12 @@ export default async function DashboardPage() {
           </ul>
         </section>
 
-        <p className="mt-10 text-xs text-neutral-400">
-          Course search and the schedule builder land in Phase 3.
-        </p>
+        <nav className="mt-10 flex flex-wrap gap-4 border-t border-neutral-200 pt-4 text-sm" aria-label="Quick links">
+          <Link href="/plan" className="text-western-purple underline">Search courses &amp; build a schedule</Link>
+          <Link href="/enrollment" className="text-western-purple underline">Enrollment</Link>
+          <Link href="/academic-file" className="text-western-purple underline">Your academic file</Link>
+          <Link href="/chat" className="text-western-purple underline">Ask an advisor</Link>
+        </nav>
       </main>
     </>
   );

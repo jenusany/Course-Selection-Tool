@@ -1,7 +1,8 @@
 # PLAN.md — Western Course Selection Platform (Faculty of Science, First Draft)
 
-Status: **DRAFT — awaiting approval**. Nothing outside this file (and the quick
-reachability check on `westerncalendar.uwo.ca` noted below) has been created yet.
+Status: **All 7 phases built** (2026-09-28). See §11 for what was built in
+each phase, what's proven vs. asserted, and known v1 limitations; see
+`README.md` for setup and a demo script through every seeded student.
 
 ---
 
@@ -484,10 +485,52 @@ Seeded students (5–8, all in `packages/db/seed/students.ts`):
   persisted server-side (`ChatSession`/`ChatMessage` tables were optional
   per the original plan and were skipped for v1).
 
-**Phase 7 — Polish**
+**Phase 7 — Polish** *(built 2026-09-28)*
 - WCAG AA pass (keyboard nav, contrast, aria), mobile layout, empty/error
   states, README with setup + a demo script walking through every seeded
   student end to end.
+- Acceptance: proven with automated tooling, not eyeballed. `e2e/accessibility.spec.ts`
+  runs a real `axe-core` scan (`@axe-core/playwright`, WCAG 2.1 A/AA tags)
+  against all 8 major pages/roles — 0 violations — plus dedicated keyboard-
+  operability tests (tab to a control, activate with Enter/Space, no mouse)
+  and mobile-viewport tests (375px, asserting zero horizontal overflow) on
+  6 pages. `e2e/empty-states.spec.ts` drives every page as Priya Nakamura,
+  the intentionally-empty first-year fixture (no programs, no completed
+  courses, no holds), confirming real empty-state copy renders instead of
+  erroring. `e2e/error-states.spec.ts` proves real error paths: an
+  unauthenticated API request is redirected by `middleware.ts` before ever
+  reaching the route handler (confirmed by not following the redirect,
+  rather than assuming a status code), a malformed request gets a clear
+  400, and both the chat widget and the schedule planner surface a failed
+  network request through a visible alert rather than failing silently.
+- Real bugs found and fixed by actually running the scans (not just
+  fixed speculatively): the shared `Nav` header overflowed horizontally at
+  375px because none of its flex rows wrapped; the shadcn `TabsList` used
+  on the counsellor one-pager overflowed the same way with 5 triggers on a
+  narrow screen (fixed with `max-w-full overflow-x-auto`, a scrollable tab
+  strip); the Fall/Winter term selector on `/plan` used Radix `Tabs`
+  without any `TabsContent`, which is an invalid ARIA tabs pattern (a tab
+  with no tabpanel) — replaced with a plain `role="group"` toggle-button
+  pair, which is what it semantically is (a filter, not a tabpanel
+  switcher); `text-neutral-400` (used in ~10 places for secondary text —
+  timestamps, remove/delete buttons, the nav role badge) fails WCAG AA
+  contrast on a white background (~2.5:1, needs 4.5:1) — bumped to
+  `text-neutral-600`; shadcn's default `--muted-foreground` token (used by
+  every inactive Radix `Tabs`/`Select` trigger app-wide) also failed at
+  ~4.3:1 on `--muted`'s background — darkened once in `globals.css` rather
+  than patched per-component; the three course-search `Select` filter
+  triggers had no accessible name (critical `button-name` violation) —
+  given explicit `aria-label`s.
+- Known v1 limitations: the automated scan covers the 8 pages' default/
+  static states, not every dynamic sub-state (e.g. the chat widget mid-
+  conversation, an open `Select` dropdown's own contrast) — spot-checked
+  manually, not exhaustively scanned; mobile layout is verified by absence
+  of horizontal overflow at 375px, not a full visual/touch-target audit at
+  every breakpoint; no screen-reader (VoiceOver/NVDA) pass was done, since
+  that's not automatable the way axe-core's static/computed-style checks
+  are — axe-core's own docs note it catches roughly 30-50% of WCAG issues
+  by nature, so this is real, verified progress, not a claim of full
+  compliance.
 
 Each phase ends with: tests run, app run, a short "works / mocked" summary,
 then I stop for your review before starting the next phase.

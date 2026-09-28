@@ -106,7 +106,7 @@ export default async function AcademicFilePage() {
               <li key={p.id}>
                 <div className="font-medium">{p.type}</div>
                 <div className="text-neutral-600">{p.decision}</div>
-                <div className="text-xs text-neutral-400">Decided by {p.decidedBy} · {p.date.toLocaleDateString()}</div>
+                <div className="text-xs text-neutral-600">Decided by {p.decidedBy} · {p.date.toLocaleDateString()}</div>
               </li>
             ))}
             {file.petitionExceptions.length === 0 && <li className="text-neutral-500">None on file</li>}
@@ -119,11 +119,11 @@ export default async function AcademicFilePage() {
               <li key={n.id} className="rounded-md border border-neutral-200 p-3">
                 <div className="flex items-center justify-between">
                   <span className="font-medium">{n.topic}</span>
-                  <span className="text-xs text-neutral-400">{n.date.toLocaleDateString()}</span>
+                  <span className="text-xs text-neutral-600">{n.date.toLocaleDateString()}</span>
                 </div>
                 <p className="mt-1 text-neutral-600">{n.summary}</p>
                 {n.followUps && <p className="mt-1 text-xs text-neutral-500">Follow-up: {n.followUps}</p>}
-                <p className="mt-1 text-xs text-neutral-400">— {n.counsellor.name}</p>
+                <p className="mt-1 text-xs text-neutral-600">— {n.counsellor.name}</p>
               </li>
             ))}
             {file.advisingNotes.length === 0 && <li className="text-neutral-500">No advising notes on file</li>}
@@ -136,7 +136,7 @@ export default async function AcademicFilePage() {
             {accessLog.map((entry) => (
               <li key={entry.id} className="text-neutral-600">
                 {entry.viewer.name} ({entry.viewer.role.toLowerCase()}) — {entry.action.toLowerCase()} {entry.resourceType} —{" "}
-                <span className="text-neutral-400">{entry.createdAt.toLocaleString()}</span>
+                <span className="text-neutral-600">{entry.createdAt.toLocaleString()}</span>
               </li>
             ))}
             {accessLog.length === 0 && <li className="text-neutral-500">No recorded views yet</li>}

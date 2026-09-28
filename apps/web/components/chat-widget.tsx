@@ -80,7 +80,7 @@ export function ChatWidget() {
             )}
           </div>
         ))}
-        {isPending && <div className="text-sm text-neutral-400">Thinking…</div>}
+        {isPending && <div className="text-sm text-neutral-600">Thinking…</div>}
         {error && <div className="text-sm text-red-700">{error}</div>}
       </div>
       <form

@@ -270,6 +270,22 @@ syntax error pointing at a box-drawing character in the migration file).
   naming it, because its bag-of-words vector diluted across too much
   vocabulary; splitting fixed it) — a real chunking-pipeline concern, not
   just a workaround for the mock embedding.
+- **Accessibility is checked with `@axe-core/playwright`, not eyeballed**
+  (`e2e/accessibility.spec.ts`, Phase 7) — every new page should get a
+  scan added there. Two conventions that came out of fixing what it found:
+  don't use `text-neutral-400` for anything a user needs to read (timestamps,
+  secondary labels, remove/delete buttons included) — it's ~2.5:1 on white,
+  WCAG AA needs 4.5:1; `text-neutral-600` is the safe floor used everywhere
+  in this codebase instead. And don't reach for Radix `Tabs` for something
+  that isn't actually tabpanel content (e.g. a term/filter toggle) — a `Tabs`
+  trigger with no matching `TabsContent` is an invalid ARIA tabs pattern;
+  use a plain `role="group"` of buttons with `aria-pressed` instead (see
+  the Fall/Winter selector in `schedule-planner.tsx`). `e2e/empty-states.spec.ts`
+  drives every page as Priya Nakamura (the intentionally-empty first-year
+  fixture) instead of only ever testing with fully-populated students, and
+  `e2e/error-states.spec.ts` proves real failure paths (an unauthenticated
+  request never reaches a route handler — `middleware.ts` redirects first;
+  a failed client fetch surfaces through a visible alert, not silently).
 - **Monorepo tool: pnpm workspaces only**, no Turborepo/Nx — flagged as an
   intentional deviation from a literal reading of the original stack list,
   approved during planning; revisit only if build caching actually becomes a
