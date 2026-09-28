@@ -20,7 +20,7 @@ packages/core        Framework-independent business logic (audit, validation,
                      enrollment, provider *interfaces*). No Prisma/Next imports.
 packages/db          Prisma schema, migrations, seed data, mock provider impls
 packages/workers      BullMQ queues/processors (enrollment engine, Phase 4)
-packages/chatbot      RAG ingestion + tool orchestration (Phase 6+)
+packages/chatbot      RAG retrieval, tool orchestration, and ChatModelProvider impls
 packages/config       Shared tsconfig base
 requirements/         Declarative YAML: degree rules + module requirements
 scripts/load-simulator  N-student enrollment load simulator (Phase 4)
@@ -221,6 +221,55 @@ syntax error pointing at a box-drawing character in the migration file).
   petition fixtures are seeded by `packages/db/prisma/seed/lib/academic-file.ts`
   (2 counsellors, 4 students each) — fabricated, not real advising records
   (see `DATA_TODO.md`).
+- **Advisor chatbot** (`packages/chatbot`, `apps/web/app/chat`, `apps/web/app/api/chat`,
+  Phase 6): `answerQuestion` (`packages/chatbot/src/orchestrate.ts`) is the
+  single entry point — `packages/core/src/chatbot/guardrails.ts`'s
+  `checkScope` runs first and short-circuits out-of-scope questions
+  (petitions/appeals/accommodations/academic standing/medical/financial aid)
+  to a canned counsellor redirect with zero model calls; otherwise
+  `retrieveRelevantChunks` does a real pgvector `<=>` ANN query over
+  `CalendarChunk` and the top results are injected as a numbered,
+  cited context message before calling the `ChatModelProvider`. If the
+  model calls the one offered tool (`GET_DEGREE_AUDIT_TOOL`), the real
+  audit engine runs (`getDegreeAudit`, moved to `packages/db/src/audit.ts`
+  in this phase so `apps/web`'s dashboard/counsellor pages and the chatbot
+  share one cached implementation instead of duplicating it) and its
+  digest (`summarizeAuditForTool`) is fed back for a second completion —
+  never guessing a student's personal progress from policy text.
+  **`CalendarChunk` embeddings are a deterministic hashing-trick bag-of-words
+  vector** (`packages/core/src/chatbot/embed.ts`), not a real ML embedding —
+  no embedding provider is configured in this environment. It's genuinely
+  wired to pgvector (real `INSERT ... embedding vector(1536)`, real
+  `ORDER BY embedding <=> query`), just with a mock vector function; swap
+  `embedText` for a real provider (OpenAI/Voyage/a local Ollama embedding
+  model) behind the same signature when one is configured, and re-run
+  `pnpm db:seed` to re-embed. **`CHAT_MODEL_PROVIDER` defaults to `"mock"`**
+  (`packages/chatbot/src/providers/mock.ts`) — no API key needed, runs out
+  of the box, same pattern as mock auth/mock student records. It simulates
+  what a real model would do with the same system prompt (keyword-based
+  `looksPersonal` stands in for the model inferring intent from the tool's
+  description). `AnthropicChatModelProvider`/`OllamaChatModelProvider` are
+  real, code-complete implementations behind `CHAT_MODEL_PROVIDER=anthropic`/
+  `=ollama`, **untested against a live API in this environment** (no key,
+  no local Ollama server) — see `DATA_TODO.md`. `ChatMessage`'s role set
+  (system/user/assistant/tool) is deliberately simpler than Anthropic's
+  native tool_use/tool_result block shape so one interface fits both real
+  providers; the Anthropic provider folds every system-role message into
+  one top-level `system` string and sends a "tool" message as plain
+  user-role text rather than a native tool_result block — a real v1
+  simplification, not a bug. Calendar chunks are ingested at seed time
+  (`packages/db/prisma/seed/lib/calendar-chunks.ts`, part of `pnpm db:seed`)
+  from real data already in the database/requirement YAML — course
+  catalog text (`Course.sourceUrl` is the real citation), and prose
+  generated from the requirement DSL for modules/degree rules (citing the
+  real `Modules.cfm?ModuleID=...`/`PolicyPages.cfm?...` URLs already in
+  each YAML file's `# Source:` header comment) — nothing fabricated.
+  Long documents are split into several small chunks rather than one giant
+  one per module/degree file (measured directly: an unsplit HSp-Computer-
+  Science module chunk didn't rank in the top 4 results for a query
+  naming it, because its bag-of-words vector diluted across too much
+  vocabulary; splitting fixed it) — a real chunking-pipeline concern, not
+  just a workaround for the mock embedding.
 - **Monorepo tool: pnpm workspaces only**, no Turborepo/Nx — flagged as an
   intentional deviation from a literal reading of the original stack list,
   approved during planning; revisit only if build caching actually becomes a

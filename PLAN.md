@@ -453,14 +453,36 @@ Seeded students (5–8, all in `packages/db/seed/students.ts`):
   UI, only fixture data and read views (out of scope — no medical detail is
   stored, matching the schema's own comment).
 
-**Phase 6 — Chatbot**
-- Calendar chunk ingestion → pgvector, RAG retrieval with citations, tool
-  call into the audit engine for personal questions, Anthropic + Ollama
-  provider implementations, scope guardrails (redirect to a real counsellor
-  for exceptions/appeals/accommodations/standing).
-- Acceptance: test prompts showing (a) a policy question answered with a
-  citation, (b) a personal question invoking the audit tool rather than
-  guessing, (c) an out-of-scope question politely redirected.
+**Phase 6 — Chatbot** *(built 2026-09-28)*
+- Calendar chunk ingestion → pgvector (`/chat`, `apps/web/app/api/chat`),
+  RAG retrieval with citations, tool call into the audit engine for personal
+  questions, Anthropic + Ollama provider implementations (code-complete,
+  untested live — no key/local server in this environment), scope
+  guardrails (redirect to a real counsellor for exceptions/appeals/
+  accommodations/standing/medical/financial aid).
+- Acceptance: proven, not just asserted, three ways for the same three
+  prompts — `packages/chatbot/test/orchestrate.test.ts` (unit-level, live
+  seeded DB, deterministic `MockChatModelProvider`), `e2e/chatbot.spec.ts`
+  (full browser flow through the real `/chat` UI and `/api/chat` route),
+  and `packages/chatbot/test/retrieve.test.ts` (proves the retrieval step
+  itself is real pgvector ANN search, not string matching): (a) "What is
+  the prerequisite for COMPSCI 2210A/B?" → answered with a `[1]` citation
+  linking the real calendar page; (b) "Am I on track to finish my Computer
+  Science module?" → calls `get_degree_audit`, answers from the real audit
+  result, never guesses; (c) "Can I petition for an antirequisite
+  exception?" → redirected to a real academic counsellor, no model/DB call
+  for the audit at all.
+- Known v1 limitations: `CalendarChunk` embeddings are a deterministic
+  hashing-trick mock, not a real ML embedding model (see `DATA_TODO.md`) —
+  genuinely wired to pgvector, just not semantically-aware the way a real
+  embedding would be (won't generalize across synonyms/paraphrase); citations
+  shown are every retrieved chunk, not only the ones the model's answer text
+  actually cited; the Anthropic/Ollama providers map `ChatMessage`'s
+  simplified role set onto each API's native shape in a best-effort way
+  (no native `tool_result` blocks) and are untested against a live
+  API/server; chat history is passed per-request from the client, not
+  persisted server-side (`ChatSession`/`ChatMessage` tables were optional
+  per the original plan and were skipped for v1).
 
 **Phase 7 — Polish**
 - WCAG AA pass (keyboard nav, contrast, aria), mobile layout, empty/error

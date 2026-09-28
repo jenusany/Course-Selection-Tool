@@ -13,6 +13,7 @@ export function Nav({ name, role }: { name: string; role: string }) {
               <Link href="/plan" className="hover:text-western-purple">Course selection</Link>
               <Link href="/enrollment" className="hover:text-western-purple">Enrollment</Link>
               <Link href="/academic-file" className="hover:text-western-purple">Academic file</Link>
+              <Link href="/chat" className="hover:text-western-purple">Ask an advisor</Link>
             </nav>
           )}
           {(role === "COUNSELLOR" || role === "ADMIN") && (

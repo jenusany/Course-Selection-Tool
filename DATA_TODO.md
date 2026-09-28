@@ -70,6 +70,28 @@ scraped directly from the live 2026 calendar at `westerncalendar.uwo.ca` on
   document-missing hold, and Jordan Whitfield's petition to her existing
   antirequisite-conflict fixture). Not real Western advising records.
 
+- **`CalendarChunk.embedding` vectors are a deterministic hashing-trick
+  bag-of-words construction** (`packages/core/src/chatbot/embed.ts`), not a
+  real ML embedding model — no embedding provider (OpenAI, Voyage, a local
+  Ollama embedding model, ...) is configured in this environment. Real
+  pgvector infrastructure is exercised (a real `vector(1536)` column, real
+  `INSERT`, real `ORDER BY embedding <=> query` ANN search — see
+  `packages/chatbot/src/retrieve.ts` and its test), just with a mock vector
+  function standing in for a real embedding call. It captures shared-
+  vocabulary similarity (proven in `packages/core/test/chatbot-embed.test.ts`
+  and `packages/chatbot/test/retrieve.test.ts`) but won't generalize across
+  synonyms or paraphrase the way a real embedding would.
+- **`AnthropicChatModelProvider` and `OllamaChatModelProvider`
+  (`packages/chatbot/src/providers/`) are real, code-complete
+  implementations, untested against a live API/server in this
+  environment** — no `ANTHROPIC_API_KEY` is set and no local Ollama server
+  is running. `CHAT_MODEL_PROVIDER` defaults to `"mock"`
+  (`packages/chatbot/src/providers/mock.ts`), which is what every Phase 6
+  test and the running dev app actually exercise. Set `CHAT_MODEL_PROVIDER=anthropic`
+  plus a real `ANTHROPIC_API_KEY` (or `=ollama` plus a running
+  `OLLAMA_BASE_URL`) to switch — see the "Advisor chatbot" section of
+  `CLAUDE.md` for the exact mapping/limitations of each.
+
 ## Scope simplifications
 
 - **Breadth Category A electives** (`PSYCHOL 1000`, `ECONOMIC 1021A/B`,

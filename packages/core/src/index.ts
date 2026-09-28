@@ -15,3 +15,6 @@ export * from "./search.js";
 export * from "./enrollment/fingerprint.js";
 export * from "./enrollment/validate.js";
 export * from "./access/scope.js";
+export * from "./chatbot/embed.js";
+export * from "./chatbot/guardrails.js";
+export * from "./chatbot/tools.js";

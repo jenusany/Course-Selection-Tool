@@ -5,11 +5,14 @@ experience, scoped to the Faculty of Science. See `PLAN.md` for the full
 architecture and phase breakdown, `CLAUDE.md` for conventions and key
 decisions, and `DATA_TODO.md` for seed-data caveats.
 
-**Status:** Phases 1–5 complete — scaffold/seed/auth, degree audit engine,
+**Status:** Phases 1–6 complete — scaffold/seed/auth, degree audit engine,
 course search + schedule builder, the enrollment engine (intents,
-pre-validation, atomic appointment-time commit, load simulator), and the
+pre-validation, atomic appointment-time commit, load simulator), the
 academic record + counsellor portal (student-facing file, counsellor
-caseload + one-page summary, role-based access with a live access log).
+caseload + one-page summary, role-based access with a live access log), and
+the advisor chatbot (`/chat` — RAG over the real calendar with citations,
+tool-calls the degree audit engine for personal questions, redirects
+out-of-scope questions to a real counsellor).
 
 ## Prerequisites
 
@@ -84,13 +87,22 @@ real Western SSO available here. Pick any of them to sign in.
   against this real catalog data. The academic record + counsellor portal's
   access control (advising-relationship scoping, access logging) is fully
   working logic — the notes/tickets/petitions it displays are fixture data.
+  The advisor chatbot's retrieval, scope guardrails, and audit-tool-calling
+  logic are fully working against real calendar text (with real citation
+  URLs) and the real audit engine — see below for what's mocked inside it.
 - **Mocked:** authentication (dev login list; real Entra ID wiring exists but
   is off by default), the student record system, the entire timetable
   (every `Section` — days/times/instructor/capacity — is synthetically
   generated, since no real Western timetable feed exists to mock against),
-  and the advising notes/accommodation tickets/petition records shown in the
-  counsellor portal (fabricated fixtures, not real Western advising data).
-- **Not built yet:** the chatbot — see `PLAN.md`'s phase list.
+  the advising notes/accommodation tickets/petition records shown in the
+  counsellor portal (fabricated fixtures, not real Western advising data),
+  the chatbot's model (`CHAT_MODEL_PROVIDER=mock` by default — no API key
+  needed; real Anthropic/Ollama implementations exist and are code-complete
+  but untested live here, see `DATA_TODO.md`), and its embeddings (a
+  deterministic hashing-trick vector standing in for a real embedding model,
+  genuinely wired to pgvector).
+- **Not built yet:** Phase 7 polish (WCAG pass, mobile layout, demo script) —
+  see `PLAN.md`'s phase list.
 
 ## Commands
 
