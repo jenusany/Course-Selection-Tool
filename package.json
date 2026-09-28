@@ -14,9 +14,11 @@
     "db:generate": "pnpm --filter @wcs/db generate",
     "db:migrate": "pnpm --filter @wcs/db migrate",
     "db:seed": "pnpm --filter @wcs/db seed",
-    "db:studio": "pnpm --filter @wcs/db studio"
+    "db:studio": "pnpm --filter @wcs/db studio",
+    "e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.48.0",
     "typescript": "^5.6.3"
   }
 }

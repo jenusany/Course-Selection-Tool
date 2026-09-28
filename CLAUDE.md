@@ -24,8 +24,14 @@ packages/chatbot      RAG ingestion + tool orchestration (Phase 6+)
 packages/config       Shared tsconfig base
 requirements/         Declarative YAML: degree rules + module requirements
 scripts/load-simulator  N-student enrollment load simulator (Phase 4+)
-e2e/                 Playwright specs
+e2e/                 Playwright specs (schedule builder happy path so far)
 ```
+
+`apps/web/app/` is currently flat (`dashboard/`, `login/`, `plan/`), not the
+route-grouped `(student)/(counsellor)/(admin)` layout PLAN.md's repo-layout
+section sketches — deliberately deferred (route groups are invisible in the
+URL, so it's a safe, low-priority reorg whenever it's worth the diff, not a
+Phase 3 requirement).
 
 Package manager is **pnpm** (workspaces, see `pnpm-workspace.yaml`). Enable it
 via `corepack enable && corepack prepare pnpm@9 --activate` if it's missing.
@@ -44,6 +50,7 @@ pnpm dev                     # next dev (apps/web)
 pnpm build                   # build all packages
 pnpm test                    # vitest across all packages
 pnpm typecheck                # tsc --noEmit across all packages
+pnpm e2e                      # playwright test (needs `pnpm dev` already running against a seeded DB)
 ```
 
 Run `cp .env.example .env` once (already done in this checkout) before
@@ -120,6 +127,34 @@ syntax error pointing at a box-drawing character in the migration file).
   whenever a change would alter results for the same input — it's part of
   the `DegreeAuditSnapshot` fingerprint that `apps/web/lib/audit.ts` uses to
   decide whether a cached audit is still valid.
+- **Course search + schedule builder** (`apps/web/app/plan`, Phase 3):
+  `packages/core/src/validation/schedule.ts` (`validateScheduleAddition`) is
+  the one place that decides whether adding a section is safe — duplicate/
+  already-completed/time-conflict/prereq/antireq/credit-load/section-full,
+  each tagged `severity: "block" | "warning"`. `packages/core/src/search.ts`
+  (`computeRequirementBadges`) reuses the *audit's own output* to badge a
+  course "counts toward X": it walks `DegreeAuditResult.modules[].requirements`
+  and `.degreeRequirements`, and badges a course wherever it appears in an
+  **UNMET** requirement's `suggestedCourses` — no separate matching logic,
+  so a badge and the dashboard's audit can never disagree. Both are pure,
+  framework-independent, and unit-tested; `apps/web/components/schedule-planner.tsx`
+  is the one client component that calls them and calls the `schedule-actions.ts`
+  server actions (which re-derive the acting student from the session on
+  every call — never trust a client-supplied studentId for ownership checks).
+  Known v1 simplification: `ScheduleItem` has one preferred + one fallback
+  section per course, so a LEC's companion LAB/TUT isn't independently
+  selectable — see `DATA_TODO.md`.
+- **shadcn/ui**: `apps/web/components.json` + `components/ui/*` (button,
+  badge, card, tabs, checkbox, select, tooltip, separator, input, label,
+  scroll-area — added for Phase 3, more via `npx shadcn add <name>`). The
+  Western-purple brand color is wired into shadcn's own CSS-variable tokens
+  (`--primary` in `app/globals.css`), not bolted on separately. The weekly
+  calendar grid is hand-rolled Tailwind (no date/calendar library) — 5 fixed
+  day columns is simple enough not to need one.
+- **Playwright** (`e2e/`, root `pnpm e2e`): no `webServer` block in
+  `playwright.config.ts` — the app needs a seeded Postgres that Playwright
+  itself can't provision, so start `pnpm dev` (with a real DB migrated +
+  seeded) yourself first, same as manual testing.
 - **Monorepo tool: pnpm workspaces only**, no Turborepo/Nx — flagged as an
   intentional deviation from a literal reading of the original stack list,
   approved during planning; revisit only if build caching actually becomes a

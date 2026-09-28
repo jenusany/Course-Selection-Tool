@@ -390,12 +390,22 @@ Seeded students (5–8, all in `packages/db/seed/students.ts`):
   Faculty-of-Science-minimum rules not evaluated; admission requirements are
   schema-validated but not audited.
 
-**Phase 3 — Course search + schedule builder**
+**Phase 3 — Course search + schedule builder** *(built 2026-09-27)*
 - Split search/calendar UI, hover preview, conflict highlighting, filters,
   requirement badges, live validation, multi-draft schedules + one marked
   enrollment plan.
 - Acceptance: manual walkthrough + Playwright happy-path test (search →
-  add → conflict shown → resolve → mark as plan).
+  add → conflict shown → resolve → mark as plan). Both e2e tests pass against
+  a live Postgres instance (`e2e/schedule-builder.spec.ts`).
+- Known v1 limitations: `ScheduleItem` has one preferred + one fallback
+  section per course (no separate LEC/TUT component selection — a real
+  registration needs both); `DEFAULT_MAX_CREDITS_PER_TERM` (3.0) is a
+  reasonable planning default, not a scraped Western policy number (Western
+  only publishes an *annual* minimum); badge/prereq computation runs over
+  the whole current-year catalog client-side, fine at ~120 courses but would
+  need server-side filtering at real-calendar scale; hover-preview conflict
+  highlighting only checks time overlap, not the section's other conflict
+  types.
 
 **Phase 4 — Enrollment engine**
 - Intents, pre-validation worker, fingerprinting, commit worker with

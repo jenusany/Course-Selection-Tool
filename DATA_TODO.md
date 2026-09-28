@@ -33,8 +33,12 @@ scraped directly from the live 2026 calendar at `westerncalendar.uwo.ca` on
   notes (mostly "Integrated Science 1001X can be used in place of ..."
   substitution sentences, and a few genuinely ambiguous lists). The exact
   list is pinned in `packages/core/test/prereq.test.ts`. **Action needed:**
-  none for the audit (it doesn't use prerequisites); worth a hand review
-  before Phase 3's live prerequisite validation relies on them.
+  none for the audit (it doesn't use prerequisites). Phase 3's schedule
+  builder does use them for live validation — an `unparsed`/`outOfCatalog`
+  fragment evaluates to `UNKNOWN`, which the UI shows as a non-blocking
+  "prerequisites include something we can't verify" warning rather than
+  silently treating it as met or guessing it's unmet. Still worth a hand
+  review of that 22-course list at some point.
 
 ## Intentionally synthetic (not real Western data)
 
@@ -93,6 +97,12 @@ scraped directly from the live 2026 calendar at `westerncalendar.uwo.ca` on
   clause). Each is called out in its module's YAML under `notes:`. The audit
   engine (Phase 2) should surface these as advisory text when the triggering
   condition is detected, rather than silently ignoring them.
+- **`DEFAULT_MAX_CREDITS_PER_TERM = 3.0`** (`packages/core/src/validation/schedule.ts`,
+  Phase 3) is a reasonable per-term planning ceiling, not a number from the
+  calendar — Western's scraped degree rules only state an *annual* senior-
+  credit minimum, not a per-term maximum. Adding a course past this shows a
+  non-blocking "you may need Dean's permission" warning. Revisit if a real
+  per-term overload threshold is ever sourced from the calendar.
 
 ## Curated course selection
 
